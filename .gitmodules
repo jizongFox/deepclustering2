@@ -1,0 +1,9 @@
+[submodule "reference/Jacinle"]
+	path = reference/Jacinle
+	url = https://github.com/vacancy/Jacinle.git
+[submodule "reference/torch-toolbox"]
+	path = reference/torch-toolbox
+	url = https://github.com/PistonY/torch-toolbox.git
+[submodule "reference/PyContrast"]
+	path = reference/PyContrast
+	url = https://github.com/HobbitLong/PyContrast.git
