@@ -12,8 +12,8 @@ from typing import *
 
 from torch.utils.data import Dataset
 
-from deepclustering.dataset.clustering_helper import ClusterDatasetInterface
-from deepclustering.dataset.semi_helper import SemiDataSetInterface
+from deepclustering2.dataset.clustering_helper import ClusterDatasetInterface
+from deepclustering2.dataset.semi_helper import SemiDataSetInterface
 from .cifar import CIFAR10
 from ... import DATA_PATH
 from ...augment import TransformInterface

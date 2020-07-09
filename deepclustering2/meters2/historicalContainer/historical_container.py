@@ -50,7 +50,10 @@ class HistoricalContainer(metaclass=ABCMeta):
 
     def summary(self) -> pd.DataFrame:
         # todo: deal with the case where you have absent epoch
-        validated_table = pd.DataFrame(self.record_dict).T
+        try:
+            validated_table = pd.DataFrame(self.record_dict).T
+        except ValueError:
+            validated_table = pd.DataFrame(self.record_dict, index=[""]).T
         # check if having missing values
         if len(self.record_dict) < self.current_epoch:
             missing_table = pd.DataFrame(

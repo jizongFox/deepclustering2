@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from deepclustering2.arch._prototype import _AbstractNetwork
 from torch.autograd import Variable
 
 
@@ -262,7 +261,7 @@ class Decoder(nn.Module):
         return output
 
 
-class Enet(_AbstractNetwork):
+class Enet(nn.Module):
     def __init__(self, input_dim=1, num_classes=2):
         super(Enet, self).__init__()
         self._input_dim = input_dim

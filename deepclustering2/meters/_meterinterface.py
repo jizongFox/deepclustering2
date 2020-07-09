@@ -156,7 +156,7 @@ class MeterInterface(MeterInteractMixin, MeterIOMixin):
 
     def delete_meter(self, name: str) -> None:
         assert (
-                name in self.meter_names
+            name in self.meter_names
         ), f"{name} should be in `meter_names`: {self.meter_names}, given {name}."
         del self._ind_meter_dicts[name]
         del self._aggregated_meter_dicts[name]

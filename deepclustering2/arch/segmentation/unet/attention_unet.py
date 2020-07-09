@@ -1,11 +1,10 @@
 import torch
 import torch.nn as nn
-from deepclustering2.arch._prototype import _AbstractNetwork
 
 from .utils import conv_block, up_conv, Attention_block
 
 
-class AttenUNet(_AbstractNetwork):
+class AttenUNet(nn.Module):
     def __init__(self, input_dim=3, num_classes=1):
         super(AttenUNet, self).__init__()
         self._input_dim = input_dim

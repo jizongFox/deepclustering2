@@ -1,7 +1,8 @@
 from functools import partial
 from typing import *
 
-from .classification import *
+from torch import nn
+
 from .segmentation import *
 from ..utils.general import _register
 
@@ -17,6 +18,7 @@ Package
 # A Map from string to arch callables
 ARCH_CALLABLES: Dict[str, Callable] = {}
 _register_arch = partial(_register, CALLABLE_DICT=ARCH_CALLABLES)
+
 
 """
 Public interface

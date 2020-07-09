@@ -1,8 +1,8 @@
 from pprint import pprint
 from typing import Dict, Any, Optional
 
-from .utils import dict_merge
-from .yaml_parser import yaml_load, YAMLArgParser
+from ._utils import dict_merge
+from ._yaml_parser import yaml_load, YAMLArgParser
 
 __all__ = ["ConfigManger"]
 

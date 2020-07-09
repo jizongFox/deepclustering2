@@ -250,25 +250,69 @@ def is_tuple_or_list(val):
 
 # convert
 def to_numpy(tensor):
-    if torch.is_tensor(tensor):
+    if is_np_array(tensor) or is_np_scalar(tensor) or isinstance(tensor, numbers.Number):
+        return tensor
+    elif torch.is_tensor(tensor):
         return tensor.cpu().detach().numpy()
-    elif type(tensor).__module__ != "numpy":
-        raise ValueError("Cannot convert {} to numpy array".format(type(tensor)))
-    return tensor
+    elif isinstance(tensor, collections.Mapping):
+        return {k: to_numpy(o) for k, o in tensor.items()}
+    elif isinstance(tensor, (tuple, list, collections.UserList)):
+        return [to_numpy(o) for o in tensor]
+    else:
+        raise TypeError(f"{tensor.__class__.__name__} cannot be convert to numpy")
 
 
 def to_torch(ndarray):
-    if type(ndarray).__module__ == "numpy":
+    if torch.is_tensor(ndarray):
+        return ndarray
+    elif type(ndarray).__module__ == "numpy":
         return torch.from_numpy(ndarray)
-    elif not torch.is_tensor(ndarray):
+    elif isinstance(ndarray, numbers.Number):
+        return torch.tensor(ndarray)
+    elif isinstance(ndarray, collections.Mapping):
+        return {k: to_torch(o) for k, o in ndarray.items()}
+    elif isinstance(ndarray, (tuple, list, collections.UserList)):
+        return [to_torch(o) for o in ndarray]
+    else:
         raise ValueError("Cannot convert {} to torch tensor".format(type(ndarray)))
-    return ndarray
 
 
 def to_float(value):
     if torch.is_tensor(value):
-        return value.item()
+        return float(value.item())
     elif type(value).__module__ == "numpy":
-        return value.item()
+        return float(value.item())
     elif type(value) in (float, int):
         return float(value)
+    elif isinstance(value, collections.Mapping):
+        return {k: to_float(o) for k, o in value.items()}
+    elif isinstance(value, (tuple, list, collections.UserList)):
+        return [to_float(o) for o in value]
+    else:
+        raise TypeError(f"{value.__class__.__name__} cannot be converted to float.")
+
+
+def to_device(obj, device="cpu", non_blocking=True):
+    """
+    Copy an object to a specific device asynchronizedly. If the param `main_stream` is provided,
+    the copy stream will be synchronized with the main one.
+
+    Args:
+        obj (Iterable[Tensor] or Tensor): a structure (e.g., a list or a dict) containing pytorch tensors.
+        dev (int): the target device.
+        main_stream (stream): the main stream to be synchronized.
+
+    Returns:
+        a deep copy of the data structure, with each tensor copied to the device.
+
+    """
+    # Adapted from: https://github.com/pytorch/pytorch/blob/master/torch/nn/parallel/_functions.py
+    if torch.is_tensor(obj):
+        v = obj.to(device, non_blocking=non_blocking)
+        return v
+    elif isinstance(obj, collections.Mapping):
+        return {k: to_device(o, device, non_blocking) for k, o in obj.items()}
+    elif isinstance(obj, (tuple, list, collections.UserList)):
+        return [to_device(o, device, non_blocking) for o in obj]
+    else:
+        raise TypeError(f"{obj.__class__.__name__} cannot be converted to {device}")

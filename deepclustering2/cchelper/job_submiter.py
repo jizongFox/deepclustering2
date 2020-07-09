@@ -40,10 +40,11 @@ def sbatch_script_prefix(
 
 
 class JobSubmiter:
-    def __init__(self, project_path="./", **kwargs) -> None:
+    def __init__(self, project_path="./", on_local=False, **kwargs) -> None:
         self._project_path = project_path
         for k, v in kwargs.items():
             setattr(self, k, v)
+        self._on_local = on_local
 
     def prepare_env(self, exec: Union[str, List[str]] = ""):
         if isinstance(exec, str):
@@ -65,7 +66,10 @@ class JobSubmiter:
         with open(file_fullpath, "w") as f:
             f.write(full_script)
         try:
-            subprocess.call(f"sbatch {file_fullpath}", shell=True)
+            if self._on_local:
+                subprocess.call(f"bash {file_fullpath}", shell=True)
+            else:
+                subprocess.call(f"sbatch {file_fullpath}", shell=True)
         finally:
             os.remove(file_fullpath)
 

@@ -7,7 +7,7 @@ from deepclustering2 import PROJECT_PATH
 from deepclustering2.models.models import Model
 from deepclustering2.utils.io import path2Path, path2str
 
- 
+
 class TrainerIOMixin(metaclass=ABCMeta):
     _save_dir: Path
     _model: Model
@@ -34,9 +34,7 @@ class TrainerIOMixin(metaclass=ABCMeta):
         self.load_state_dict(state_dict, *args, **kwargs)
 
     def save_to(self, save_name, path=None):
-        assert path2Path(save_name).suffix in (".pth", ".pt"), path2Path(
-            save_name
-        ).suffix
+        assert path2Path(save_name).suffix in (".pth", ".pt"), path2Path(save_name).suffix
         if path is None:
             path = self._save_dir
         else:

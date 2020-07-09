@@ -1,20 +1,18 @@
+from collections.abc import Iterable
 from typing import Union, List
 
+import numpy as np
 import torch
-from torch import Tensor
-
-from deepclustering.meters._metric import _Metric
-from deepclustering.meters import BatchDiceMeter
-from deepclustering.loss.dice_loss import MetaDice
-from deepclustering.utils import (
+from deepclustering2.meters2.individual_meters._metric import _Metric
+from deepclustering2.type import to_float
+from deepclustering2.utils import iter_average as average_list
+from deepclustering2.utils import (
     simplex,
     one_hot,
     class2one_hot,
     probs2one_hot,
-    to_float,
 )
-from collections.abc import Iterable
-import numpy as np
+from torch import Tensor
 
 
 class UniversalDice(_Metric):
@@ -117,12 +115,19 @@ class UniversalDice(_Metric):
 
     def summary(self) -> dict:
         means, stds = self.value()
-        return {f"DSC{i}": to_float(means[i]) for i in self._report_axis}
+        report_dict = {f"DSC{i}": to_float(means[i]) for i in self._report_axis}
+        report_dict.update({"DSC_mean": average_list(report_dict.values())})
+        return report_dict
 
     def detailed_summary(self) -> dict:
         means, stds = self.value()
         return {
             **{f"DSC{i}": to_float(means[i]) for i in self._report_axis},
+            **{
+                f"DSC_mean": average_list(
+                    [to_float(means[i]) for i in self._report_axis]
+                )
+            },
             **{f"DSC_std{i}": to_float(stds[i]) for i in self._report_axis},
         }
 

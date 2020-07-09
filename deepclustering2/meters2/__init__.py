@@ -2,6 +2,6 @@
 from .meter_interface import MeterInterface
 from .historicalContainer import HistoricalContainer
 from .individual_meters import *
-from .storage_interface import  Storage
+from .storage_interface import  Storage, StorageIncome
 
 # todo: improve the stability of each meter

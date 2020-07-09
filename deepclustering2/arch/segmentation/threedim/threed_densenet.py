@@ -3,7 +3,6 @@ from collections import OrderedDict
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from deepclustering2.arch._prototype import _AbstractNetwork
 
 
 class _DenseLayer(nn.Sequential):
@@ -81,7 +80,7 @@ class _Transition(nn.Sequential):
         )
 
 
-class DenseNet(_AbstractNetwork):
+class DenseNet(nn.Module):
     r"""Densenet-BC model class, based on
     `"Densely Connected Convolutional Networks" <https://arxiv.org/pdf/1608.06993.pdf>`_
 

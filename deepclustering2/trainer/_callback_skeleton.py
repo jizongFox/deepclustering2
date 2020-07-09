@@ -97,9 +97,9 @@ class CallbackSkeletonMixin(metaclass=ABCMeta):
             self._after_train()
         return result
 
-    def run_epoch(self):
+    def run_epoch(self, *args, **kwargs):
         self._before_epoch()
-        result = super(CallbackSkeletonMixin, self).run_epoch()
+        result = super(CallbackSkeletonMixin, self).run_epoch(*args, **kwargs)
         self._after_epoch()
         return result
 
@@ -109,9 +109,9 @@ class CallbackSkeletonMixin(metaclass=ABCMeta):
         self._after_step()
         return result
 
-    def eval_epoch(self):
+    def eval_epoch(self, *args, **kwargs):
         self._before_eval_epoch()
-        result = super(CallbackSkeletonMixin, self).eval_epoch()
+        result = super(CallbackSkeletonMixin, self).eval_epoch(*args, **kwargs)
         self._after_eval_epoch()
         return result
 

@@ -10,7 +10,7 @@ from typing import List, Dict, Any, Union, Tuple, Optional
 
 import yaml
 
-from .utils import dict_merge
+from ._utils import dict_merge
 
 
 class YAMLArgParser:

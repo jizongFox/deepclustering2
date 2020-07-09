@@ -22,8 +22,8 @@ class _TrainerSkeleton(metaclass=ABCMeta):
             self.run_epoch()
             self.eval_epoch()
 
-    def run_epoch(self):
-        return self._run_epoch()
+    def run_epoch(self, *args, **kwargs):
+        return self._run_epoch(*args, **kwargs)
 
     def _run_epoch(self):
         for self._cur_iter in range(self._num_iter):
@@ -36,10 +36,10 @@ class _TrainerSkeleton(metaclass=ABCMeta):
         pass
 
     # for evaluate step.
-    def eval_epoch(self):
-        return self._eval_epoch()
+    def eval_epoch(self, *args, **kwargs):
+        return self._eval_epoch(*args, **kwargs)
 
-    def _eval_epoch(self):
+    def _eval_epoch(self, *args, **kwargs):
         self._model.eval()
         self._val_iter = iter(self._val_loader)
         for self._cur_iter in range(len(self._val_loader)):

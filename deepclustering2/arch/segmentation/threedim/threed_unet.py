@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 
-from multimodal.arch.utils import conv_block_3d as conv_block, up_conv_3d as up_conv
+from .utils import conv_block_3d as conv_block, up_conv_3d as up_conv
 
 
 class UNet_3d(nn.Module):

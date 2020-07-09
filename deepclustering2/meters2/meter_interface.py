@@ -63,14 +63,14 @@ class MeterInterface(MeterInteractMixin):
         try:
             return self._ind_meter_dicts[meter_name]
         except KeyError as e:
-            print(f"meter_interface.meter_names:{self.meter_names}")
-            raise e
+            msg = f"meter_interface.meter_names:{self.meter_names}, with {e}"
+            raise KeyError(msg)
 
     def register_meter(self, name: str, meter: _Metric, group_name=None) -> None:
         assert isinstance(name, str), name
         assert isinstance(
             meter, _Metric
-        ), f"{meter.__class__.__name__} should be a subclass of {_Metric.__class__.__name__}, given {meter}."
+        ), f"{meter.__class__.__name__} should be a subclass of {_Metric.__name__}, given {meter}."
         # add meters
         self._ind_meter_dicts[name] = meter
         if group_name is not None:
