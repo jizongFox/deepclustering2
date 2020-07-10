@@ -3,7 +3,9 @@ from typing import Union, List
 
 import numpy as np
 import torch
-from deepclustering2.meters2.individual_meters._metric import _Metric
+from torch import Tensor
+
+from deepclustering2.meters2.individual_meters._metric import _Metric, MeterResultDict
 from deepclustering2.type import to_float
 from deepclustering2.utils import iter_average as average_list
 from deepclustering2.utils import (
@@ -12,7 +14,6 @@ from deepclustering2.utils import (
     class2one_hot,
     probs2one_hot,
 )
-from torch import Tensor
 
 
 class UniversalDice(_Metric):
@@ -117,19 +118,21 @@ class UniversalDice(_Metric):
         means, stds = self.value()
         report_dict = {f"DSC{i}": to_float(means[i]) for i in self._report_axis}
         report_dict.update({"DSC_mean": average_list(report_dict.values())})
-        return report_dict
+        return MeterResultDict(report_dict)
 
     def detailed_summary(self) -> dict:
         means, stds = self.value()
-        return {
-            **{f"DSC{i}": to_float(means[i]) for i in self._report_axis},
-            **{
-                f"DSC_mean": average_list(
-                    [to_float(means[i]) for i in self._report_axis]
-                )
-            },
-            **{f"DSC_std{i}": to_float(stds[i]) for i in self._report_axis},
-        }
+        return MeterResultDict(
+            {
+                **{f"DSC{i}": to_float(means[i]) for i in self._report_axis},
+                **{
+                    f"DSC_mean": average_list(
+                        [to_float(means[i]) for i in self._report_axis]
+                    )
+                },
+                **{f"DSC_std{i}": to_float(stds[i]) for i in self._report_axis},
+            }
+        )
 
     @property
     def group_names(self):
@@ -179,11 +182,6 @@ class UniversalDice(_Metric):
             class2one_hot(target, self._C).long(),
         )
 
-    def get_plot_names(self) -> List[str]:
-        return [f"DSC{i}" for i in self._report_axis]
-
     def __repr__(self):
         string = f"C={self._C}, report_axis={self._report_axis}\n"
-        return (
-            string + "\t" + "\t".join([f"{k}:{v}" for k, v in self.summary().items()])
-        )
+        return string + "\t" + str(self.detailed_summary())

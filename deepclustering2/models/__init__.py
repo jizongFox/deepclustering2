@@ -1,7 +1,7 @@
 from torch import Tensor
 
 from .convert2apex import AMPGradientBackwardStep, to_Apex
-from .models import Model, NormalGradientBackwardStep
+from .models import Model, NormalGradientBackwardStep, DPModel
 from .ema import EMA_Model
 
 

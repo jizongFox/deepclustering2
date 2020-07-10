@@ -1,14 +1,22 @@
-import matplotlib
+import atexit
+from pathlib import Path
+
 from tensorboardX import SummaryWriter as _SummaryWriter
 
-matplotlib.use("agg")
+from deepclustering2.utils import flatten_dict
+
+
+def path2Path(path) -> Path:
+    assert isinstance(path, (str, Path)), path
+    return path if isinstance(path, Path) else Path(path)
 
 
 class SummaryWriter(_SummaryWriter):
     def __init__(self, log_dir=None, comment="", **kwargs):
-        assert log_dir is not None, f"log_dir should be provided, given {log_dir}."
-        log_dir = str(log_dir) + "/tensorboard"
-        super().__init__(log_dir, comment, **kwargs)
+        log_dir = path2Path(log_dir)
+        assert log_dir.exists() and log_dir.is_dir(), log_dir
+        super().__init__(str(log_dir / "tensorboard"), comment, **kwargs)
+        atexit.register(self.close)
 
     def add_scalar_with_tag(
         self, tag, tag_scalar_dict, global_step=None, walltime=None
@@ -22,6 +30,19 @@ class SummaryWriter(_SummaryWriter):
         :return:
         """
         assert global_step is not None
+        tag_scalar_dict = flatten_dict(tag_scalar_dict)
+
         for k, v in tag_scalar_dict.items():
             # self.add_scalars(main_tag=tag, tag_scalar_dict={k: v})
-            self.add_scalar(tag=f"{tag}/{k}", scalar_value=v, global_step=global_step)
+            self.add_scalar(
+                tag=f"{tag}/{k}",
+                scalar_value=v,
+                global_step=global_step,
+                walltime=walltime,
+            )
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()

@@ -17,6 +17,8 @@ from torch import Tensor
 from torch import nn
 from tqdm import tqdm
 
+from deepclustering2.type import to_float
+
 A = TypeVar("A")
 B = TypeVar("B")
 T = TypeVar("T", Tensor, np.ndarray)
@@ -350,7 +352,7 @@ def nice_dict(input_dict: Dict[str, Union[int, float]]) -> str:
             is_flat_dict = False
             break
     flat_dict = input_dict if is_flat_dict else flatten_dict(input_dict, sep="")
-    string_list = [f"{k}:{v:.3f}" for k, v in flat_dict.items()]
+    string_list = [f"{k}:{to_float(v):.3f}" for k, v in flat_dict.items()]
     return ", ".join(string_list)
 
 

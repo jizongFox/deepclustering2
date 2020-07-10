@@ -1,8 +1,6 @@
-from typing import List
-
 import numpy as np
 
-from ._metric import _Metric
+from ._metric import _Metric, MeterResultDict
 
 
 class AverageValueMeter(_Metric):
@@ -45,17 +43,11 @@ class AverageValueMeter(_Metric):
 
     def summary(self) -> dict:
         # this function returns a dict and tends to aggregate the historical results.
-        return {"mean": self.value()[0]}
+        return MeterResultDict({"mean": self.value()[0]})
 
     def detailed_summary(self) -> dict:
         # this function returns a dict and tends to aggregate the historical results.
-        return {"mean": self.value()[0], "val": self.value()[1]}
+        return MeterResultDict({"mean": self.value()[0], "val": self.value()[1]})
 
     def __repr__(self):
-        def _dict2str(value_dict: dict):
-            return "\t".join([f"{k}:{v}" for k, v in value_dict.items()])
-
-        return f"{self.__class__.__name__}: n={self.n} \n \t {_dict2str(self.detailed_summary())}"
-
-    def get_plot_names(self) -> List[str]:
-        return ["mean"]
+        return f"{self.__class__.__name__}: n={self.n} \t {self.detailed_summary()}"

@@ -7,3 +7,6 @@
 [submodule "reference/PyContrast"]
 	path = reference/PyContrast
 	url = https://github.com/HobbitLong/PyContrast.git
+[submodule "reference/pytorch-optimizer"]
+	path = reference/pytorch-optimizer
+	url = https://github.com/jettify/pytorch-optimizer.git

@@ -4,8 +4,9 @@ from collections import defaultdict
 from typing import DefaultDict, Callable, List, Dict
 
 import pandas as pd
+from termcolor import colored
 
-from deepclustering2.epoch import EpochResult
+from deepclustering2.meters2.meter_interface import EpochResultDict
 from deepclustering2.utils import path2Path
 from .historicalContainer import HistoricalContainer
 from .utils import rename_df_columns
@@ -13,27 +14,16 @@ from .utils import rename_df_columns
 __all__ = ["Storage"]
 
 
-class StorageIncome:
-
-    def __init__(self, tra: EpochResult = None, val: EpochResult = None, test: EpochResult = None, *_,
-                 **kwargs) -> None:
-        self._tra = tra
-        self._val = val
-        self._test = test
+class StorageIncomeDict:
+    def __init__(self, **kwargs) -> None:
         for k, v in kwargs.items():
-            setattr(self, f"_other_{k}", v)
+            setattr(self, f"{k}", v)
 
     def __repr__(self):
         string_info = ""
-        if self._tra:
-            string_info += "train result:\n"
-            string_info += f"{self._tra}"
-        if self._val:
-            string_info += "val result:\n"
-            string_info += f"{self._val}"
-        if self._test:
-            string_info += "test result:\n"
-            string_info += f"{self._test}"
+        for k, v in self.__dict__.items():
+            string_info += colored(f"{k}:\n", "red")
+            string_info += f"{v}"
         return string_info
 
 
@@ -46,6 +36,8 @@ class _IOMixin:
 
     def load_state_dict(self, state_dict):
         self._storage = state_dict
+        print("loading from checkpoint:")
+        print(colored(self.summary(), "green"))
 
     def to_csv(self, path, name="storage.csv"):
         path = path2Path(path)
@@ -55,7 +47,6 @@ class _IOMixin:
 
 
 class Storage(_IOMixin, metaclass=ABCMeta):
-
     def __init__(self) -> None:
         super().__init__()
         self._storage = defaultdict(HistoricalContainer)
@@ -66,15 +57,17 @@ class Storage(_IOMixin, metaclass=ABCMeta):
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass
 
-    def put(self, name: str, value: Dict[str, float], epoch=None, prefix="", postfix=""):
+    def put(
+        self, name: str, value: Dict[str, float], epoch=None, prefix="", postfix=""
+    ):
         self._storage[prefix + name + postfix].add(value, epoch)
 
-    def put_all(self, epoch_result :EpochResult=None, epoch=None):
+    def put_all(self, epoch_result: EpochResultDict = None, epoch=None):
         if epoch_result:
             for k, v in epoch_result.items():
                 self.put(k, v, epoch)
 
-    def put_from_dict(self, income_dict: StorageIncome, epoch: int = None):
+    def put_from_dict(self, income_dict: StorageIncomeDict, epoch: int = None):
         for k, v in income_dict.__dict__.items():
             self.put_all(v, epoch)
 
@@ -90,8 +83,7 @@ class Storage(_IOMixin, metaclass=ABCMeta):
         :return:
         """
         list_of_summary = [
-            rename_df_columns(v.summary(), k)
-            for k, v in self._storage.items()
+            rename_df_columns(v.summary(), k) for k, v in self._storage.items()
         ]
         # merge the list
         summary = functools.reduce(

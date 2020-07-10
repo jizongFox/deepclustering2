@@ -1,52 +1,44 @@
 from collections import OrderedDict
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Type
 
-from .individual_meters._metric import _Metric
+from deepclustering2.utils import nice_dict
+from .individual_meters._metric import _Metric, MeterResultDict
 
 _Record_Type = Dict[str, float]
 
 
-class MeterInteractMixin:
-    individual_meters: Dict[str, _Metric]
-    _ind_meter_dicts: Dict[str, _Metric]
-    _group_dicts: Dict[str, List[str]]
-    group: List[str]
-    meter_names: List[str]
+class EpochResultDict(dict):
+    """
+    The dictionary only allows input as an instance of `MeterResult`
+    """
 
-    def tracking_status(
-        self, group_name=None, detailed_summary=False
-    ) -> Dict[str, _Record_Type]:
-        """
-        return current training status from "ind_meters"
-        :param group_name:
-        :return:
-        """
-        if group_name:
-            assert group_name in self.group
-            return {
-                k: v.detailed_summary() if detailed_summary else v.summary()
-                for k, v in self.individual_meters.items()
-                if k in self._group_dicts[group_name]
-            }
-        return {
-            k: v.detailed_summary() if detailed_summary else v.summary()
-            for k, v in self.individual_meters.items()
-        }
+    def __init__(self, *args, **kwargs) -> None:
 
-    def add(self, meter_name, *args, **kwargs):
-        assert meter_name in self.meter_names
-        self._ind_meter_dicts[meter_name].add(*args, **kwargs)
+        if len(args):
+            for _dict in args:
+                for k, v in _dict.items():
+                    assert isinstance(k, str), k
+                    assert isinstance(v, MeterResultDict), v
+        if len(kwargs):
+            for k, v in kwargs.items():
+                assert isinstance(k, str), k
+                assert isinstance(v, MeterResultDict), v
+        super(EpochResultDict, self).__init__(*args, **kwargs)
 
-    def reset(self) -> None:
-        """
-        reset individual meters
-        :return: None
-        """
-        for v in self._ind_meter_dicts.values():
-            v.reset()
+    def __repr__(self):
+        string_info = ""
+        for k, v in self.items():
+            string_info += f"{k}: \n"
+            string_info += f"\t{nice_dict(v)}\n"
+        return string_info
+
+    def __setitem__(self, key, value):
+        assert isinstance(key, str), key
+        assert isinstance(value, MeterResultDict), value
+        super(EpochResultDict, self).__setitem__(key, value)
 
 
-class MeterInterface(MeterInteractMixin):
+class MeterInterface:
     """
     meter interface only concerns about the situation in one epoch,
     without considering historical record and save/load state_dict function.
@@ -61,10 +53,9 @@ class MeterInterface(MeterInteractMixin):
 
     def __getitem__(self, meter_name: str) -> _Metric:
         try:
-            return self._ind_meter_dicts[meter_name]
+            return self.meters[meter_name]
         except KeyError as e:
-            msg = f"meter_interface.meter_names:{self.meter_names}, with {e}"
-            raise KeyError(msg)
+            raise KeyError(e)
 
     def register_meter(self, name: str, meter: _Metric, group_name=None) -> None:
         assert isinstance(name, str), name
@@ -82,7 +73,7 @@ class MeterInterface(MeterInteractMixin):
         assert (
             name in self.meter_names
         ), f"{name} should be in `meter_names`: {self.meter_names}, given {name}."
-        del self._ind_meter_dicts[name]
+        del self.meters[name]
         for group, meter_namelist in self._group_dicts.items():
             if name in meter_namelist:
                 meter_namelist.remove(name)
@@ -103,11 +94,44 @@ class MeterInterface(MeterInteractMixin):
     def meters(self) -> Optional[Dict[str, _Metric]]:
         if hasattr(self, "_ind_meter_dicts"):
             return self._ind_meter_dicts
+        raise NotImplementedError("_ind_meter_dicts")
 
     @property
     def group(self) -> List[str]:
-        return sorted(self._group_dicts.keys())
+        return list(self._group_dicts.keys())
 
-    @property
-    def individual_meters(self):
-        return self._ind_meter_dicts
+    def tracking_status(
+        self, group_name=None, detailed_summary=False
+    ) -> EpochResultDict:
+        """
+        return current training status from "ind_meters"
+        :param group_name:
+        :return:
+        """
+        if group_name:
+            assert group_name in self.group
+            return EpochResultDict(
+                **{
+                    k: v.detailed_summary() if detailed_summary else v.summary()
+                    for k, v in self.meters.items()
+                    if k in self._group_dicts[group_name]
+                }
+            )
+        return EpochResultDict(
+            **{
+                k: v.detailed_summary() if detailed_summary else v.summary()
+                for k, v in self.meters.items()
+            }
+        )
+
+    def add(self, meter_name, *args, **kwargs):
+        assert meter_name in self.meter_names
+        self.meters[meter_name].add(*args, **kwargs)
+
+    def reset(self) -> None:
+        """
+        reset individual meters
+        :return: None
+        """
+        for v in self.meters.values():
+            v.reset()

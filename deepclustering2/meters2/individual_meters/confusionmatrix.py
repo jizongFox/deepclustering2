@@ -3,7 +3,7 @@ import warnings
 import numpy as np
 import torch
 
-from ._metric import _Metric
+from ._metric import _Metric, MeterResultDict
 
 
 class ConfusionMatrix(_Metric):
@@ -102,11 +102,11 @@ class ConfusionMatrix(_Metric):
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore")
             acc = np.diag(self.conf).sum() / np.sum(self.conf)
-        return {"acc": acc}
+        return MeterResultDict({"acc": acc})
 
     def detailed_summary(self) -> dict:
         acc = np.diag(self.conf).sum() / np.sum(self.conf)
-        return {"acc": acc}
+        return MeterResultDict({"acc": acc})
 
     def log(self):
         return self.conf

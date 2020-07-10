@@ -1,25 +1,24 @@
 import warnings
-from typing import *
+from abc import ABCMeta
+from copy import deepcopy
+from typing import Dict, Any, Union, Optional
 
 import torch
-from torch import Tensor
+from torch import Tensor, optim
 from torch import nn
 from torch.nn import functional as F
 from torch.optim import lr_scheduler
 
 from deepclustering2 import ModelMode
-from deepclustering2 import optim
 from deepclustering2.arch import get_arch
-from deepclustering2.callbacks.callback_base import CallbackHook
-from deepclustering2.schedulers import GradualWarmupScheduler
 from deepclustering2.utils import simplex
+
+__all__ = ["Model", "DPModel"]
 
 CType = Dict[str, Union[float, int, str, Dict[str, Any]]]  # typing for config
 NetType = nn.Module
 OptimType = optim.Optimizer
 ScheType = optim.lr_scheduler._LRScheduler
-
-__all__ = ["Model", "DeployModel"]
 
 
 class NormalGradientBackwardStep(object):
@@ -40,7 +39,7 @@ class NormalGradientBackwardStep(object):
         self.model.step()
 
 
-class Model(CallbackHook):
+class Model(metaclass=ABCMeta):
     """
     This is the new class for model interface
     """
@@ -50,13 +49,7 @@ class Model(CallbackHook):
         arch: Union[NetType, CType],
         optimizer: Union[OptimType, CType] = None,
         scheduler: Union[ScheType, CType] = None,
-        after_epoch=lambda x: x._model.schedulerStep(),
     ):
-
-        super().__init__(
-            after_epoch=after_epoch,
-        )
-
         """
         create network from either configuration or module directly.
         :param arch: network configuration or network module
@@ -72,14 +65,14 @@ class Model(CallbackHook):
         self._torchnet: nn.Module
         self._arch_dict: Optional[CType]
         if isinstance(arch, dict):
-            self._arch_dict = arch.copy()
-            _arch_name: str = arch["name"]  # type:ignore
-            _arch_params = {k: v for k, v in arch.items() if k != "name"}
-            self._torchnet = get_arch(_arch_name, _arch_params)
+            self._arch_dict = arch
+            arch_dict = deepcopy(arch)
+            arch_name: str = arch_dict.pop("name")  # type:ignore
+            self._torchnet = get_arch(arch_name, arch_dict)
         else:
             self._arch_dict = None
             self._torchnet = arch
-        assert issubclass(type(self._torchnet), nn.Module)
+        assert issubclass(type(self._torchnet), nn.Module), type(self._torchnet)
 
     def _set_optimizer(self, optimizer: Union[OptimType, CType] = None) -> None:
         self._optimizer: Optional[OptimType]
@@ -88,11 +81,11 @@ class Model(CallbackHook):
             self._optim_dict = None
             self._optimizer = None
         elif isinstance(optimizer, dict):
-            self._optim_dict = optimizer.copy()
-            _optim_name: str = optimizer["name"]  # type:ignore
-            _optim_params = {k: v for k, v in optimizer.items() if k != "name"}
-            self._optimizer = getattr(optim, _optim_name)(
-                self.parameters(), **_optim_params
+            self._optim_dict = optimizer
+            optim_dict = deepcopy(optimizer)
+            optim_name: str = optim_dict.pop("name")  # type:ignore
+            self._optimizer = getattr(optim, optim_name)(
+                self.parameters(), **optim_dict
             )
         else:
             self._optim_dict = None
@@ -107,20 +100,21 @@ class Model(CallbackHook):
             self._scheduler = None
             self._scheduler_dict = None
         elif isinstance(scheduler, dict):
-            self._scheduler_dict = scheduler.copy()
-            _scheduler_name: str = scheduler["name"]  # type:ignore
-            _scheduler_params = {k: v for k, v in scheduler.items() if k != "name"}
-            self._scheduler = getattr(lr_scheduler, _scheduler_name)(
+            self._scheduler_dict = scheduler
+            scheduler_dict = deepcopy(scheduler)
+            scheduler_name: str = scheduler_dict.pop("name")  # type:ignore
+            self._scheduler = getattr(lr_scheduler, scheduler_name)(
                 self._optimizer,
-                **{k: v for k, v in _scheduler_params.items() if k != "warmup"},
+                **{k: v for k, v in scheduler_dict.items() if k != "warmup"},
             )
-            if "warmup" in _scheduler_params:
+            if "warmup" in scheduler_dict:
                 # encode warmup scheduler
+                from deepclustering.schedulers import GradualWarmupScheduler
 
                 self._scheduler = GradualWarmupScheduler(  # type: ignore
                     optimizer=self._optimizer,
                     after_scheduler=self._scheduler,
-                    **_scheduler_params["warmup"],
+                    **scheduler_dict["warmup"],
                 )
         else:
             self._scheduler_dict = None
@@ -182,8 +176,9 @@ class Model(CallbackHook):
 
     def get_lr(self):
         if self._scheduler is not None:
-            return self._scheduler.get_lr()
-        return None
+            return self._scheduler.get_last_lr()
+        warnings.warn("No scheduler is found while calling for `get_lr()`")
+        return [0]
 
     @property
     def optimizer(self):
@@ -274,15 +269,45 @@ class Model(CallbackHook):
         return model
 
 
-class DeployModel(Model):
-    def __init__(self, arch: Union[NetType, CType]):
-        super().__init__(arch)
-        self.eval()
+class DPModel(Model):
+    def __init__(
+        self,
+        arch: Union[NetType, CType],
+        optimizer: Union[OptimType, CType] = None,
+        scheduler: Union[ScheType, CType] = None,
+    ):
+        self._USEDP = False
+        super().__init__(arch, optimizer, scheduler)
+        if torch.cuda.is_available():
+            if torch.cuda.device_count() > 1:
+                self._torchnet = torch.nn.DataParallel(self._torchnet)
+                self._USEDP = True
 
-    def step(self):
-        raise RuntimeError(f"{self.__class__.__name__} does not support `step` method.")
+    def state_dict(self):
+        return {
+            "arch_dict": self._arch_dict,
+            "optim_dict": self._optim_dict,
+            "scheduler_dict": self._scheduler_dict,
+            "net_state_dict": self._torchnet.module.state_dict()
+            if self._USEDP
+            else self._torchnet.state_dict(),
+            "optim_state_dict": self._optimizer.state_dict()
+            if self._optimizer is not None
+            else None,
+            "scheduler_state_dict": self._scheduler.state_dict()
+            if self._scheduler is not None
+            else None,
+        }
 
-    def schedulerStep(self, *args, **kwargs):
-        raise RuntimeError(
-            f"{self.__class__.__name__} does not support `schedulerStep` method."
-        )
+    def load_state_dict(self, state_dict: dict):
+        self._arch_dict = state_dict["arch_dict"]
+        self._optim_dict = state_dict["optim_dict"]
+        self._scheduler_dict = state_dict["scheduler_dict"]
+        if self._USEDP:
+            self._torchnet.module.load_state_dict(state_dict["net_state_dict"])
+        else:
+            self._torchnet.load_state_dict(state_dict["net_state_dict"])
+        if hasattr(self._optimizer, "load_state_dict") and self._optimizer is not None:
+            self._optimizer.load_state_dict(state_dict["optim_state_dict"])
+        if hasattr(self._scheduler, "load_state_dict") and self._scheduler is not None:
+            self._scheduler.load_state_dict(state_dict["scheduler_state_dict"])

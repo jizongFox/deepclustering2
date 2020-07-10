@@ -1,14 +1,12 @@
-from typing import List
-
 import numpy as np
 import torch
 import torch.nn.functional as F
 from torch import Tensor
 
-from ._metric import _Metric
 from deepclustering2.loss.dice_loss import dice_coef, dice_batch
-from deepclustering2.utils import probs2one_hot, class2one_hot
 from deepclustering2.type.typecheckconvert import to_float
+from deepclustering2.utils import probs2one_hot, class2one_hot
+from ._metric import _Metric, MeterResultDict
 
 __all__ = ["SliceDiceMeter", "BatchDiceMeter"]
 
@@ -81,20 +79,19 @@ class _DiceMeter(_Metric):
 
     def detailed_summary(self) -> dict:
         _, (means, _) = self.value()
-        return {f"DSC{i}": to_float(means[i]) for i in range(len(means))}
+        return MeterResultDict(
+            {f"DSC{i}": to_float(means[i]) for i in range(len(means))}
+        )
 
     def summary(self) -> dict:
         _, (means, _) = self.value()
-        return {f"DSC{i}": to_float(means[i]) for i in self._report_axis}
-
-    def get_plot_names(self) -> List[str]:
-        return [f"DSC{i}" for i in self._report_axis]
+        return MeterResultDict(
+            {f"DSC{i}": to_float(means[i]) for i in self._report_axis}
+        )
 
     def __repr__(self):
         string = f"C={self._C}, report_axis={self._report_axis}\n"
-        return (
-            string + "\t" + "\t".join([f"{k}:{v}" for k, v in self.summary().items()])
-        )
+        return string + "\t" + str(self.detailed_summary())
 
 
 class SliceDiceMeter(_DiceMeter):

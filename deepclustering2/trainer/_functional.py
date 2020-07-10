@@ -9,7 +9,6 @@ from deepclustering2.models import Model
 
 class TrainerFuncMixin(metaclass=ABCMeta):
     _model: Model
-    _criterion: Callable[[Tensor, Tensor], Tensor]
     _device: torch.device
 
     def to(self, device):
@@ -17,5 +16,6 @@ class TrainerFuncMixin(metaclass=ABCMeta):
             if hasattr(module, "to") and callable(module.to):
                 try:
                     module.to(device=device)
-                except:
+                except Exception as e:
+                    print(e)
                     continue
