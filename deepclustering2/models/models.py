@@ -176,7 +176,7 @@ class Model(metaclass=ABCMeta):
 
     def get_lr(self):
         if self._scheduler is not None:
-            return self._scheduler.get_last_lr()
+            return self._scheduler.get_lr()
         warnings.warn("No scheduler is found while calling for `get_lr()`")
         return [0]
 

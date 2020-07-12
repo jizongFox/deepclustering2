@@ -62,14 +62,17 @@ class Storage(_IOMixin, metaclass=ABCMeta):
     ):
         self._storage[prefix + name + postfix].add(value, epoch)
 
-    def put_all(self, epoch_result: EpochResultDict = None, epoch=None):
+    def put_all(
+        self, result_name: str, epoch_result: EpochResultDict = None, epoch=None
+    ):
+        assert isinstance(result_name, str), result_name
         if epoch_result:
             for k, v in epoch_result.items():
-                self.put(k, v, epoch)
+                self.put(result_name + "_" + k, v, epoch)
 
     def put_from_dict(self, income_dict: StorageIncomeDict, epoch: int = None):
         for k, v in income_dict.__dict__.items():
-            self.put_all(v, epoch)
+            self.put_all(k, v, epoch)
 
     def get(self, name, epoch=None):
         assert name in self._storage, name

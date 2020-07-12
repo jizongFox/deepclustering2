@@ -4,18 +4,18 @@ from typing import TypeVar
 
 import numpy as np
 import torch
-from deepclustering2 import PROJECT_PATH
-from deepclustering2.models.models import Model
-from deepclustering2.utils.io import path2Path, path2str
 from torch import Tensor
 
+from deepclustering2 import PROJECT_PATH
+from deepclustering2.models.models import Model
+from deepclustering2.utils.io import path2Path, path2str, write_yaml
 from ._buffer import _BufferMixin
 
 N = TypeVar("N", int, float, Tensor, np.ndarray)
 
 
 class TrainerIOMixin(_BufferMixin, metaclass=ABCMeta):
-    _save_dir: Path
+    _save_dir: str
     _model: Model
 
     RUN_PATH = str(Path(PROJECT_PATH) / "runs")
@@ -34,15 +34,18 @@ class TrainerIOMixin(_BufferMixin, metaclass=ABCMeta):
         assert isinstance(save_dir, str), save_dir
         if not Path(save_dir).is_absolute():
             save_dir = str(Path(self.RUN_PATH) / save_dir)
-        self._register_buffer("_save_dir", save_dir)
+        # self._register_buffer("_save_dir", save_dir)
+        self._save_dir = save_dir
         Path(self._save_dir).mkdir(exist_ok=True, parents=True)
-        self._register_buffer("_max_epoch", max_epoch)
-        self._register_buffer("_num_batches", num_batches)
+        # self._register_buffer("_max_epoch", max_epoch)
         self._register_buffer("_best_score", -1)
         self._register_buffer("_start_epoch", 0)
         self._register_buffer("_cur_epoch", 0)
-
+        self._max_epoch = max_epoch
+        self._num_batches = num_batches  # it can be changed when debugging
         self._configuration = configuration
+        if self._configuration:
+            write_yaml(self._configuration, save_dir, save_name="config.yaml")
 
     def state_dict(self) -> dict:
         buffer_state_dict = self._buffer_state_dict()
@@ -87,12 +90,18 @@ class TrainerIOMixin(_BufferMixin, metaclass=ABCMeta):
                 )
             )
 
-        if self._cur_epoch > self._begin_epoch:
-            self._begin_epoch = self._cur_epoch
+        if self._cur_epoch > self._start_epoch:
+            self._start_epoch = self._cur_epoch + 1
 
     def load_state_dict_from_path(self, path, *args, **kwargs) -> None:
         path = path2Path(path)
-        assert path.exists() and path.is_file() and path.suffix in (".pth", ".pt"), path
+        assert path.exists(), path
+        if path.is_file() and path.suffix in (".pth", ".pt"):
+            path = path
+        elif path.is_dir() and (path / "last.pth").exists():
+            path = path / "last.pth"
+        else:
+            raise FileNotFoundError(path)
         state_dict = torch.load(path2str(path), map_location="cpu")
         self.load_state_dict(state_dict, *args, **kwargs)
 

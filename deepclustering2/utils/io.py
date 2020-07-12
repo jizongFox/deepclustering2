@@ -40,7 +40,7 @@ def write_yaml(
             save_name = (
                 save_name.split(".")[0] + "_copy" + "." + save_name.split(".")[1]
             )
-    with open(str(save_dir / save_name), "w") as outfile:  # type: ignore
+    with open(str(save_path), "w") as outfile:  # type: ignore
         yaml.dump(dictionary, outfile, default_flow_style=False)
 
 
