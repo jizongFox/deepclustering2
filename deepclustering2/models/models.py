@@ -109,7 +109,7 @@ class Model(metaclass=ABCMeta):
             )
             if "warmup" in scheduler_dict:
                 # encode warmup scheduler
-                from deepclustering.schedulers import GradualWarmupScheduler
+                from deepclustering2.schedulers import GradualWarmupScheduler
 
                 self._scheduler = GradualWarmupScheduler(  # type: ignore
                     optimizer=self._optimizer,

@@ -5,14 +5,14 @@ from typing import List, Tuple
 from sklearn.model_selection import train_test_split
 from termcolor import colored
 
-from deepclustering import DATA_PATH
-from deepclustering.augment import SequentialWrapper
-from deepclustering.dataset.segmentation import (
+from deepclustering2 import DATA_PATH
+from deepclustering2.augment import SequentialWrapper
+from deepclustering2.dataset.segmentation import (
     MedicalImageSegmentationDataset,
     SubMedicalDatasetBasedOnIndex,
 )
-from deepclustering.dataset.semi_helper import MedicalDatasetSemiInterface
-from deepclustering.utils.download_unzip_helper import download_and_extract_archive
+from deepclustering2.dataset.semi_helper import MedicalDatasetSemiInterface
+from deepclustering2.utils.download_unzip_helper import download_and_extract_archive
 from copy import deepcopy as dcopy
 
 

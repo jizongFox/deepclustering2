@@ -3,8 +3,8 @@ from typing import Union
 
 import matplotlib.pyplot as plt
 
-from deepclustering.decorator import threaded
-from deepclustering.meters import MeterInterface
+from deepclustering2.decorator import threaded
+from deepclustering2.meters2 import MeterInterface
 
 # here we should pass a callback function to specific a different plot style.
 from ._dataframedrawercallback import (

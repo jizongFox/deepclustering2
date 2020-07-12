@@ -8,7 +8,7 @@ from typing import List, Pattern, Dict, Callable, Match
 import numpy as np
 from torch.utils.data.sampler import Sampler
 
-from deepclustering.utils import id_, map_
+from deepclustering2.utils import id_, map_
 from ._medicalSegmentationDataset import MedicalImageSegmentationDataset
 
 __all__ = ["PatientSampler", "SubMedicalDatasetBasedOnIndex"]

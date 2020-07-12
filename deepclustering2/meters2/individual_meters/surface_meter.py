@@ -1,8 +1,8 @@
 from typing import List, Union
 
 import numpy as np
-from deepclustering.meters._metric import _Metric
-from deepclustering.utils import (
+from deepclustering2.meters2.individual_meters._metric import _Metric
+from deepclustering2.utils import (
     simplex,
     one_hot,
     class2one_hot,

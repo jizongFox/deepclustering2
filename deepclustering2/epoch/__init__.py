@@ -1,4 +1,5 @@
 from deepclustering2.utils import nice_dict
+from ._epocher import _Epocher
 
 
 class EpochResult(dict):

@@ -7,8 +7,8 @@ from functools import reduce
 from typing import *
 
 import PIL
-from deepclustering.dataset.clustering_helper import ClusterDatasetInterface
-from deepclustering.dataset.semi_helper import SemiDataSetInterface
+from deepclustering2.dataset.clustering_helper import ClusterDatasetInterface
+from deepclustering2.dataset.semi_helper import SemiDataSetInterface
 from torch.utils.data import Dataset
 from torchvision import transforms
 

@@ -1,5 +1,5 @@
 from abc import ABCMeta
-from typing import Callable, TypeVar, Tuple
+from typing import Callable, TypeVar, Tuple, Iterable
 
 import torch
 from torch.utils.data.dataloader import DataLoader, _BaseDataLoaderIter
@@ -11,7 +11,7 @@ from deepclustering2.trainer._functional import TrainerFuncMixin
 from deepclustering2.trainer._io import TrainerIOMixin
 from deepclustering2.trainer._trainer import _Trainer
 
-T_loader = TypeVar("D", DataLoader, _BaseDataLoaderIter)
+T_loader = TypeVar("D", DataLoader, _BaseDataLoaderIter, Iterable)
 T_loss = TypeVar("L", bound=Callable[[torch.Tensor, torch.Tensor], torch.Tensor])
 
 

@@ -1,6 +1,6 @@
 from pprint import pprint
 from typing import Dict, Any, Optional
-
+from copy import deepcopy as dcp
 from ._utils import dict_merge
 from ._yaml_parser import yaml_load, YAMLArgParser
 
@@ -26,20 +26,20 @@ class ConfigManger:
 
     @property
     def default_config(self):
-        return self._default_config
+        return dcp(self._default_config)
 
     @property
     def parsed_config(self):
-        return self._parsed_args
+        return dcp(self._parsed_args)
 
     @property
     def merged_config(self):
-        return self._merged_config
+        return dcp(self._merged_config)
 
     @property
     def config(self):
         config = self.merged_config
-        return config
+        return dcp(config)
 
     def show_default_dict(self):
         print("default dict from {}".format(self._default_path))

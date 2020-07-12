@@ -4,16 +4,16 @@ from typing import List, Tuple
 
 from sklearn.model_selection import train_test_split
 
-from deepclustering import DATA_PATH
-from deepclustering.augment import SequentialWrapper
-from deepclustering.dataset.segmentation._medicalSegmentationDataset import (
+from deepclustering2 import DATA_PATH
+from deepclustering2.augment import SequentialWrapper
+from deepclustering2.dataset.segmentation._medicalSegmentationDataset import (
     MedicalImageSegmentationDataset,
 )
-from deepclustering.dataset.segmentation._patient_sampler import (
+from deepclustering2.dataset.segmentation._patient_sampler import (
     SubMedicalDatasetBasedOnIndex,
 )
-from deepclustering.dataset.semi_helper import MedicalDatasetSemiInterface
-from deepclustering.utils.download_unzip_helper import download_and_extract_archive
+from deepclustering2.dataset.semi_helper import MedicalDatasetSemiInterface
+from deepclustering2.utils.download_unzip_helper import download_and_extract_archive
 
 
 class ACDCDataset(MedicalImageSegmentationDataset):
