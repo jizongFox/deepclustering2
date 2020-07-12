@@ -7,14 +7,14 @@ from typing import Tuple, Callable, List, Type, Dict, Union
 
 import numpy as np
 from PIL import Image
-from deepclustering.augment import SequentialWrapper
-from deepclustering.dataloader.dataset import CombineDataset
-from deepclustering.dataloader.sampler import InfiniteRandomSampler
-from deepclustering.dataset.segmentation import (
+from deepclustering2.augment import SequentialWrapper
+from deepclustering2.dataloader.dataset import CombineDataset
+from deepclustering2.dataloader.sampler import InfiniteRandomSampler
+from deepclustering2.dataset.segmentation import (
     MedicalImageSegmentationDataset,
     PatientSampler,
 )
-from deepclustering.decorator import FixRandomSeed
+from deepclustering2.decorator import FixRandomSeed
 from torch import Tensor
 from torch.utils.data import Dataset, DataLoader, Subset
 

@@ -1,10 +1,24 @@
+import weakref
 from abc import abstractmethod, ABCMeta
 from contextlib import contextmanager
+from functools import wraps
+from typing import Union, Tuple
 
 import torch
 
 from deepclustering2.meters2 import MeterInterface, EpochResultDict
 from deepclustering2.models.models import Model
+
+
+def proxy_trainer(func):
+    @wraps(func)
+    def inner_func(*args, **kwargs):
+        epocher = func(*args, **kwargs)
+        if kwargs.get("trainer"):
+            epocher.set_trainer(kwargs.get("trainer"))
+        return epocher
+
+    return inner_func
 
 
 class _Epocher(metaclass=ABCMeta):
@@ -32,10 +46,14 @@ class _Epocher(metaclass=ABCMeta):
         return meters
 
     @abstractmethod
-    def _run(self, *args, **kwargs) -> EpochResultDict:
+    def _run(
+        self, *args, **kwargs
+    ) -> Union[EpochResultDict, Tuple[EpochResultDict, float]]:
         pass
 
-    def run(self, *args, **kwargs) -> EpochResultDict:
+    def run(
+        self, *args, **kwargs
+    ) -> Union[EpochResultDict, Tuple[EpochResultDict, float]]:
         with self._register_meters() as self.meters:
             return self._run(*args, **kwargs)
 
@@ -45,3 +63,10 @@ class _Epocher(metaclass=ABCMeta):
         assert isinstance(device, torch.device)
         self._model.to(device)
         self._device = device
+
+    @staticmethod
+    def _preprocess_data(*args, **kwargs):
+        pass
+
+    def set_trainer(self, trainer):
+        self.trainer = weakref.proxy(trainer)

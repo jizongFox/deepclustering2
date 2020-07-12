@@ -7,15 +7,15 @@ from PIL import Image
 from torch import Tensor
 from torch.utils.data import Dataset
 
-from deepclustering.augment import SequentialWrapper
-from deepclustering.augment.pil_augment import ToTensor, ToLabel
-from deepclustering.utils import map_, assert_list
+from deepclustering2.augment import SequentialWrapper
+from deepclustering2.augment.pil_augment import ToTensor, ToLabel
+from deepclustering2.utils import map_, assert_list
 
 
 def allow_extension(path: str, extensions: List[str]) -> bool:
     try:
         return Path(path).suffixes[0] in extensions
-    except:
+    except Exception:
         return False
 
 

@@ -4,7 +4,7 @@ from typing import *
 
 from torch.utils.data import Dataset, DataLoader
 
-from deepclustering.dataloader import dataset
+from deepclustering2.dataloader import dataset
 
 
 class ClusterDatasetInterface(object):

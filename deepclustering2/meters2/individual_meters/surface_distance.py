@@ -1,5 +1,5 @@
 import numpy as np
-from deepclustering.utils.typecheckconvert import to_numpy
+from deepclustering2.type import to_numpy
 from medpy.metric import assd
 from medpy.metric.binary import __surface_distances
 

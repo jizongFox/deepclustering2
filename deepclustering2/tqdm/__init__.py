@@ -14,7 +14,6 @@ from tqdm.utils import _basestring, _OrderedDict
 
 from deepclustering2.meters2.meter_interface import EpochResultDict
 from deepclustering2.utils import dict_flatten, dict_filter, nice_dict
-from numba import jit
 
 # For parallelism safety
 

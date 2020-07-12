@@ -15,7 +15,7 @@ import PIL
 from torch.utils.data import Dataset
 from torchvision import transforms
 
-from deepclustering.augment import pil_augment
+from deepclustering2.augment import pil_augment
 from .svhn import SVHN
 from ..clustering_helper import ClusterDatasetInterface
 from ..semi_helper import SemiDataSetInterface

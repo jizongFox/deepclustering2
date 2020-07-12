@@ -1,4 +1,4 @@
-from deepclustering.dataset.segmentation.acdc_dataset import (
+from deepclustering2.dataset.segmentation.acdc_dataset import (
     ACDCSemiInterface,
     ACDCDataset,
 )
