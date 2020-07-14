@@ -15,6 +15,7 @@ from tqdm.utils import _basestring, _OrderedDict
 from deepclustering2.meters2.meter_interface import EpochResultDict
 from deepclustering2.utils import dict_flatten, dict_filter, nice_dict
 
+
 # For parallelism safety
 
 
@@ -102,6 +103,10 @@ class tqdm(_tqdm):
         if refresh:
             self.refresh()
         return self
+
+    def set_desc_from_epocher(self, epocher):
+        des = f"{epocher.__class__.__name__} {epocher._cur_epoch}"
+        return self.set_description(desc=des)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._print_description()

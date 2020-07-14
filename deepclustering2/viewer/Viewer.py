@@ -8,7 +8,7 @@ import numpy as np
 import torch
 import yaml
 from PIL import Image
-from deepclustering.utils import Vectorize, identical, map_
+from deepclustering2.utils import Vectorize, identical, map_
 from pathlib2 import Path
 from skimage.transform import resize as resize_func
 
@@ -569,7 +569,8 @@ class Multi_Slice_Viewer(object):
 
 
 def main():
-    import subprocess, sys
+    import subprocess
+    import sys
 
     current_folder = subprocess.check_output("pwd", shell=True).strip().decode()
     sys.path.insert(0, current_folder)
