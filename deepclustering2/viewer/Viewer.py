@@ -9,7 +9,7 @@ import torch
 import yaml
 from PIL import Image
 from deepclustering2.utils import Vectorize, identical, map_
-from pathlib2 import Path
+from pathlib import Path
 from skimage.transform import resize as resize_func
 
 """

@@ -20,6 +20,7 @@ A = TypeVar("A")
 B = TypeVar("B")
 T = TypeVar("T", Tensor, np.ndarray)
 
+
 # Assert utils
 def uniq(a: Tensor) -> Set:
     """

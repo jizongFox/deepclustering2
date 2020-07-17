@@ -39,13 +39,15 @@ class _Trainer(metaclass=ABCMeta):
             train_result = self.run_epoch()
             with torch.no_grad():
                 eval_result, cur_score = self.eval_epoch()
-
+            # update lr_scheduler
             self._model.schedulerStep()
             storage_per_epoch = StorageIncomeDict(tra=train_result, val=eval_result)
             self._storage.put_from_dict(storage_per_epoch, self._cur_epoch)
             for k, v in storage_per_epoch.__dict__.items():
                 self._writer.add_scalar_with_tag(k, v, global_step=self._cur_epoch)
+            # save_checkpoint
             self.save(cur_score)
+            # save storage result on csv file.
             self._storage.to_csv(self._save_dir)
 
     def run_epoch(self, *args, **kwargs):

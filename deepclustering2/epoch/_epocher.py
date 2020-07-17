@@ -5,6 +5,7 @@ from functools import wraps
 from typing import Union, Tuple
 
 import torch
+
 from deepclustering2.meters2 import MeterInterface, EpochResultDict
 from deepclustering2.models.models import Model
 
@@ -26,6 +27,7 @@ class _Epocher(metaclass=ABCMeta):
         self._model = model
         self._device = device
         self._cur_epoch = cur_epoch
+        self.meters: MeterInterface = None  # to be defined at context manager.
         self.to(self._device)
 
     @classmethod

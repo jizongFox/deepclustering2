@@ -48,7 +48,7 @@ class ACDCDataset(MedicalImageSegmentationDataset):
             mode,
             subfolders,
             transforms,
-            "patient\d+_\d+_\d+",
+            "patient\d+_\d+",
             verbose,
         )
 
