@@ -7,12 +7,14 @@ from torch.utils.data.dataloader import DataLoader, _BaseDataLoaderIter
 from deepclustering2.epoch._epocher import _Epocher
 from deepclustering2.meters2 import EpochResultDict
 from deepclustering2.models.models import Model
+from deepclustering2.optim import Optimizer, Adam, RAdam
 from deepclustering2.trainer._functional import TrainerFuncMixin
 from deepclustering2.trainer._io import TrainerIOMixin
 from deepclustering2.trainer._trainer import _Trainer
 
-T_loader = TypeVar("D", DataLoader, _BaseDataLoaderIter, Iterable)
-T_loss = TypeVar("L", bound=Callable[[torch.Tensor, torch.Tensor], torch.Tensor])
+T_loader = TypeVar("T_loader", DataLoader, _BaseDataLoaderIter, Iterable)
+T_loss = TypeVar("T_loss", bound=Callable[[torch.Tensor, torch.Tensor], torch.Tensor])
+T_optim = TypeVar("T_optim", Optimizer, Adam, RAdam)
 
 
 class Trainer(_Trainer, TrainerFuncMixin, TrainerIOMixin, metaclass=ABCMeta):

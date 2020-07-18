@@ -268,6 +268,20 @@ class Model(metaclass=ABCMeta):
         model.to(torch.device("cpu"))
         return model
 
+    def share_optimizer(self, torch_net: nn.Module):
+        """
+        share optimizer and scheduler of a given model to a new torchnet
+        :param torch_net:
+        :return: self
+        """
+        optimizer_type = self._optim_dict["name"]
+        new_optimizer = getattr(optim, optimizer_type)(
+            [{"param": self._torchnet.parameters()}, {"param": torch_net.parameters()}],
+            **{k: v for k, v in self._optim_dict.items() if k != "name"},
+        )
+        # scheduler_type
+        return self
+
 
 class DPModel(Model):
     def __init__(

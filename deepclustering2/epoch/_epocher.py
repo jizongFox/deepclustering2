@@ -5,6 +5,7 @@ from functools import wraps
 from typing import Union, Tuple
 
 import torch
+from torch import nn
 
 from deepclustering2.meters2 import MeterInterface, EpochResultDict
 from deepclustering2.models.models import Model
@@ -22,13 +23,14 @@ def proxy_trainer(func):
 
 
 class _Epocher(metaclass=ABCMeta):
-    def __init__(self, model: Model, cur_epoch=0, device="cpu") -> None:
+    def __init__(
+        self, model: Union[Model, nn.Module], cur_epoch=0, device="cpu"
+    ) -> None:
         super().__init__()
         self._model = model
         self._device = device
         self._cur_epoch = cur_epoch
         self.meters: MeterInterface = None  # to be defined at context manager.
-        self.to(self._device)
 
     @classmethod
     @abstractmethod
@@ -55,6 +57,7 @@ class _Epocher(metaclass=ABCMeta):
     def run(
         self, *args, **kwargs
     ) -> Union[EpochResultDict, Tuple[EpochResultDict, float]]:
+        self.to(self._device)
         with self._register_meters() as self.meters:
             return self._run(*args, **kwargs)
 
