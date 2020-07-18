@@ -15,7 +15,7 @@ T_loader = TypeVar("D", DataLoader, _BaseDataLoaderIter, Iterable)
 T_loss = TypeVar("L", bound=Callable[[torch.Tensor, torch.Tensor], torch.Tensor])
 
 
-class _Trainer(_Trainer, TrainerFuncMixin, TrainerIOMixin, metaclass=ABCMeta):
+class Trainer(_Trainer, TrainerFuncMixin, TrainerIOMixin, metaclass=ABCMeta):
     def __init__(
         self,
         model: Model,
@@ -25,7 +25,7 @@ class _Trainer(_Trainer, TrainerFuncMixin, TrainerIOMixin, metaclass=ABCMeta):
         device: str = "cpu",
         configuration=None,
     ):
-        super(_Trainer, self).__init__(
+        super(Trainer, self).__init__(
             save_dir=save_dir,
             max_epoch=max_epoch,
             num_batches=num_batches,

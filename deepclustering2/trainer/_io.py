@@ -28,7 +28,7 @@ class TrainerIOMixin(_BufferMixin, metaclass=ABCMeta):
         num_batches: int = None,
         configuration=None,
         *args,
-        **kwargs
+        **kwargs,
     ) -> None:
         super().__init__(*args, **kwargs)
         assert isinstance(save_dir, str), save_dir
@@ -141,3 +141,6 @@ class TrainerIOMixin(_BufferMixin, metaclass=ABCMeta):
         if self._best_score < current_score:
             self._best_score = current_score
             self._save_to(save_name="best.pth")
+
+    def periodic_save(self, cur_epoch: int, path: str = None):
+        self._save_to(save_name=f"epoch_{cur_epoch}.pth", path=path)
