@@ -136,11 +136,11 @@ class TrainerIOMixin(_BufferMixin, metaclass=ABCMeta):
     def resume_from_checkpoint(self, checkpoint):
         pass
 
-    def save(self, current_score: float):
-        self._save_to(save_name="last.pth")
+    def save(self, current_score: float, path=None):
+        self._save_to(save_name="last.pth", path=path)
         if self._best_score < current_score:
             self._best_score = current_score
-            self._save_to(save_name="best.pth")
+            self._save_to(save_name="best.pth", path=path)
 
     def periodic_save(self, cur_epoch: int, path: str = None):
         self._save_to(save_name=f"epoch_{cur_epoch}.pth", path=path)

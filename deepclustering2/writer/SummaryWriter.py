@@ -3,6 +3,7 @@ from pathlib import Path
 
 from tensorboardX import SummaryWriter as _SummaryWriter
 
+from deepclustering2.meters2 import StorageIncomeDict
 from deepclustering2.utils import flatten_dict
 
 
@@ -40,6 +41,10 @@ class SummaryWriter(_SummaryWriter):
                 global_step=global_step,
                 walltime=walltime,
             )
+
+    def add_scalar_with_StorageDict(self, storage_dict: StorageIncomeDict, epoch: int):
+        for k, v in storage_dict.__dict__.items():
+            self.add_scalar_with_tag(k, v, global_step=epoch)
 
     def __enter__(self):
         return self

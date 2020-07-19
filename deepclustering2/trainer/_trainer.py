@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from typing import Callable
+from typing import Callable, Optional
 
 import torch
 
@@ -20,7 +20,7 @@ class _Trainer(metaclass=ABCMeta):
     _max_epoch: int
     _cur_epoch: int
     _save_dir: str
-    save: Callable[[float], None]
+    save: Callable[[float, Optional[str]], None]
 
     def __init__(self, *args, **kwargs):
         super(_Trainer, self).__init__(*args, **kwargs)
