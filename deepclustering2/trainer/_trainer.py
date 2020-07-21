@@ -1,7 +1,8 @@
 from abc import ABCMeta, abstractmethod
-from typing import Callable, Optional
+from typing import Callable, Optional, Union
 
 import torch
+from torch import nn
 
 from deepclustering2.meters2.meter_interface import EpochResultDict
 from deepclustering2.meters2.storage_interface import Storage, StorageIncomeDict
@@ -14,7 +15,7 @@ class _Trainer(metaclass=ABCMeta):
     This is the main logic of the trainer without considering inference, meters and etc.
     """
 
-    _model: Model
+    _model: Union[Model, nn.Module]
     _num_batches: int
     _start_epoch: int
     _max_epoch: int

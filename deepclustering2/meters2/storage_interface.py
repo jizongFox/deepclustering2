@@ -95,8 +95,8 @@ class Storage(_IOMixin, metaclass=ABCMeta):
                 list_of_summary,
             )
             return pd.DataFrame(summary)
-        except TypeError as e:
-            return None
+        except TypeError:
+            return pd.DataFrame()
 
     @property
     def meter_names(self, sorted=False) -> List[str]:

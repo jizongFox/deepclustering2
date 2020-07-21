@@ -1,3 +1,5 @@
+from torch import nn
+
 from .models import Model
 
 
@@ -88,3 +90,39 @@ class EMA_Model:
 
     def __repr__(self):
         return self._model.__repr__()
+
+
+class ema_updater:
+    def __init__(
+        self, alpha=0.999, justify_alpha=True, weight_decay=1e-5, update_bn=False
+    ) -> None:
+        self._alpha = alpha
+        self._weight_decay = weight_decay
+        self._update_bn = update_bn
+        self._justify_alpha = justify_alpha
+        self.__global_step = 0
+
+    def __call__(self, ema_model: nn.Module, student_model: nn.Module):
+
+        alpha = self._alpha
+        if self._justify_alpha:
+            alpha = min(1 - 1 / (self.__global_step + 1), self._alpha)
+
+        for ema_param, s_param in zip(
+            ema_model.parameters(), student_model.parameters()
+        ):
+            ema_param.data.mul_(alpha).add_(1 - alpha, s_param.data)
+            if self._weight_decay > 0:
+                ema_param.data.mul_(1 - self._weight_decay)
+
+        if self._update_bn:
+            # running mean and vars for bn
+            for (name, ema_buffer), (_, s_buffer) in zip(
+                ema_model.named_buffers(), student_model.named_buffers(),
+            ):
+                if "running_mean" in name or "running_var" in name:
+                    ema_buffer.data.mul_(alpha).add_(1 - alpha, s_buffer.data)
+                    if self._weight_decay > 0:
+                        ema_buffer.data.mul_(1 - self._weight_decay)
+
+        self.__global_step += 1
