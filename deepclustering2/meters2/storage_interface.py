@@ -41,15 +41,16 @@ class _IOMixin:
 
     def to_csv(self, path, name="storage.csv"):
         path = path2Path(path)
-        assert path.is_dir(), path
         path.mkdir(exist_ok=True, parents=True)
         self.summary().to_csv(path / name)
 
 
 class Storage(_IOMixin, metaclass=ABCMeta):
-    def __init__(self) -> None:
+    def __init__(self, csv_save_dir=None, csv_name="storage.csv") -> None:
         super().__init__()
         self._storage = defaultdict(HistoricalContainer)
+        self._csv_save_dir = csv_save_dir
+        self._csv_name = csv_name
 
     def __enter__(self):
         return self
@@ -73,6 +74,9 @@ class Storage(_IOMixin, metaclass=ABCMeta):
     def put_from_dict(self, income_dict: StorageIncomeDict, epoch: int = None):
         for k, v in income_dict.__dict__.items():
             self.put_all(k, v, epoch)
+
+        if self._csv_save_dir:
+            self.to_csv(self._csv_save_dir, name=self._csv_name)
 
     def get(self, name, epoch=None):
         assert name in self._storage, name
