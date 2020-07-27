@@ -30,7 +30,7 @@ class TrainerIOMixin(_BufferMixin, metaclass=ABCMeta):
         *args,
         **kwargs,
     ) -> None:
-        super().__init__(*args, **kwargs)
+        super().__init__()
         assert isinstance(save_dir, str), save_dir
         if not Path(save_dir).is_absolute():
             save_dir = str(Path(self.RUN_PATH) / save_dir)
@@ -45,6 +45,7 @@ class TrainerIOMixin(_BufferMixin, metaclass=ABCMeta):
         self._num_batches = num_batches  # it can be changed when debugging
         self._configuration = configuration
         if self._configuration:
+
             write_yaml(self._configuration, save_dir, save_name="config.yaml")
 
     def state_dict(self) -> dict:

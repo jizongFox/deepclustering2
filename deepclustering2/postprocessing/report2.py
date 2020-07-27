@@ -8,8 +8,8 @@ from typing import List, Dict
 import numpy as np
 import pandas as pd
 
-from deepclustering.utils import merge_dict
-from deepclustering.utils.yaml_parser import str2bool
+from deepclustering2.utils import merge_dict
+from deepclustering2.configparser._yaml_parser import str2bool
 
 
 def arg_parser() -> argparse.Namespace:
