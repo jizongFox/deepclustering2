@@ -1,3 +1,4 @@
+import torch
 from torch import nn
 
 from .models import Model
@@ -102,6 +103,7 @@ class ema_updater:
         self._justify_alpha = justify_alpha
         self.__global_step = 0
 
+    @torch.no_grad()
     def __call__(self, ema_model: nn.Module, student_model: nn.Module):
 
         alpha = self._alpha

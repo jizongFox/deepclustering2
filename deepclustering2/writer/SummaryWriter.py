@@ -15,6 +15,7 @@ def path2Path(path) -> Path:
 class SummaryWriter(_SummaryWriter):
     def __init__(self, log_dir=None, comment="", **kwargs):
         log_dir = path2Path(log_dir)
+        log_dir.mkdir(exist_ok=True, parents=True)
         assert log_dir.exists() and log_dir.is_dir(), log_dir
         super().__init__(str(log_dir / "tensorboard"), comment, **kwargs)
         atexit.register(self.close)

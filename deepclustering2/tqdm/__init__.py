@@ -144,6 +144,7 @@ class tqdm(_tqdm):
         )
         if refresh:
             self.refresh()
+        self._post_dict_cache = ordered_dict
 
     @staticmethod
     def format_num(n):
