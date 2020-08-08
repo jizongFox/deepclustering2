@@ -45,7 +45,6 @@ class TrainerIOMixin(_BufferMixin, metaclass=ABCMeta):
         self._num_batches = num_batches  # it can be changed when debugging
         self._configuration = configuration
         if self._configuration:
-
             write_yaml(self._configuration, save_dir, save_name="config.yaml")
 
     def state_dict(self) -> dict:
