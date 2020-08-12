@@ -1,7 +1,8 @@
 from abc import ABCMeta
-from typing import Callable, TypeVar, Tuple, Iterable
+from typing import Callable, TypeVar, Tuple, Iterable, Union
 
 import torch
+from torch import nn
 from torch.utils.data.dataloader import DataLoader, _BaseDataLoaderIter
 
 from deepclustering2.epoch._epocher import _Epocher
@@ -20,7 +21,7 @@ T_optim = TypeVar("T_optim", Optimizer, Adam, RAdam)
 class Trainer(_Trainer, TrainerFuncMixin, TrainerIOMixin, metaclass=ABCMeta):
     def __init__(
         self,
-        model: Model,
+        model: Union[Model, nn.Module],
         save_dir: str = "base",
         max_epoch: int = 100,
         num_batches: int = 100,

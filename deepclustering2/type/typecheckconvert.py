@@ -314,7 +314,7 @@ def to_device(obj, device, non_blocking=True):
     if torch.is_tensor(obj):
         v = obj.to(device, non_blocking=non_blocking)
         return v
-    elif isinstance(obj, collections.Mapping):
+    elif isinstance(obj, collections.abc.Mapping):
         return {k: to_device(o, device, non_blocking) for k, o in obj.items()}
     elif isinstance(obj, (tuple, list, collections.UserList)):
         return [to_device(o, device, non_blocking) for o in obj]

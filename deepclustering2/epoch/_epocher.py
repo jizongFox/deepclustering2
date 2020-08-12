@@ -33,7 +33,6 @@ class _Epocher(metaclass=ABCMeta):
         self.meters: MeterInterface = None  # to be defined at context manager.
 
     @classmethod
-    @abstractmethod
     def create_from_trainer(cls, trainer):
         pass
 
