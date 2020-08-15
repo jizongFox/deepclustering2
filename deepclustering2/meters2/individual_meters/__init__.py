@@ -1,4 +1,5 @@
 from ._metric import _Metric
+
 # individual package for meters based on
 """
 >>>class _Metric(metaclass=ABCMeta):
@@ -23,7 +24,7 @@ from ._metric import _Metric
 >>>        pass
 """
 
-from .averagemeter import AverageValueMeter
+from .averagemeter import AverageValueMeter, MultipleAverageValueMeter
 from .confusionmatrix import ConfusionMatrix
 from .hausdorff import HaussdorffDistance
 from .instance import InstanceValue
