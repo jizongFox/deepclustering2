@@ -10,3 +10,6 @@
 [submodule "reference/pytorch-optimizer"]
 	path = reference/pytorch-optimizer
 	url = https://github.com/jettify/pytorch-optimizer.git
+[submodule "reference/pytorch-metric-learning"]
+	path = reference/pytorch-metric-learning
+	url = https://github.com/KevinMusgrave/pytorch-metric-learning.git
