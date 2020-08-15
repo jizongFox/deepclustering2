@@ -1,14 +1,15 @@
 from abc import ABCMeta
+from copy import deepcopy
 from pathlib import Path
 from typing import TypeVar
 
 import numpy as np
 import torch
-from torch import Tensor
-
 from deepclustering2 import PROJECT_PATH
 from deepclustering2.models.models import Model
 from deepclustering2.utils.io import path2Path, path2str, write_yaml
+from torch import Tensor
+
 from ._buffer import _BufferMixin
 
 N = TypeVar("N", int, float, Tensor, np.ndarray)
@@ -43,9 +44,9 @@ class TrainerIOMixin(_BufferMixin, metaclass=ABCMeta):
         self._register_buffer("_cur_epoch", 0)
         self._max_epoch = max_epoch
         self._num_batches = num_batches  # it can be changed when debugging
-        self._configuration = configuration
-        if self._configuration:
-            write_yaml(self._configuration, save_dir, save_name="config.yaml")
+        self._config = deepcopy(configuration)
+        if self._config:
+            write_yaml(self._config, save_dir, save_name="config.yaml")
 
     def state_dict(self) -> dict:
         buffer_state_dict = self._buffer_state_dict()
