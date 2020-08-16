@@ -59,7 +59,7 @@ class TrainerIOMixin(_BufferMixin, metaclass=ABCMeta):
         destination = {**local_state_dict, **{"_buffers": buffer_state_dict}}
         return destination
 
-    def load_state_dict(self, state_dict: dict) -> None:
+    def load_state_dict(self, state_dict: dict, strict=True) -> None:
         """
         Load state_dict for submodules having "load_state_dict" method.
         :param state_dict:
@@ -85,12 +85,22 @@ class TrainerIOMixin(_BufferMixin, metaclass=ABCMeta):
                         "error {} occurs".format(module_name, ex)
                     )
         if len(er_msgs) > 0:
-            raise RuntimeError(
-                "Error(s) in loading state_dict for {}:\n\t{}".format(
-                    self.__class__.__name__, "\n\t".join(er_msgs)
+            if strict is True:
+                raise RuntimeError(
+                    "Error(s) in loading state_dict for {}:\n\t{}".format(
+                        self.__class__.__name__, "\n\t".join(er_msgs)
+                    )
                 )
-            )
+            else:
+                import warnings
 
+                warnings.warn(
+                    RuntimeWarning(
+                        "Error(s) in loading state_dict for {}:\n\t{}".format(
+                            self.__class__.__name__, "\n\t".join(er_msgs)
+                        )
+                    )
+                )
         if self._cur_epoch > self._start_epoch:
             self._start_epoch = self._cur_epoch + 1
 
