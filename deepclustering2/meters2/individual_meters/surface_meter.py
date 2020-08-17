@@ -1,7 +1,7 @@
 from typing import List, Union
 
 import numpy as np
-from deepclustering2.meters2.individual_meters._metric import _Metric
+from deepclustering2.meters2.individual_meters._metric import _Metric, MeterResultDict
 from deepclustering2.utils import (
     simplex,
     one_hot,
@@ -84,23 +84,27 @@ class SurfaceMeter(_Metric):
 
     def summary(self) -> dict:
         means, stds = self.value()
-        return {
-            f"{self._abbr}{i}": to_float(means[num])
-            for num, i in enumerate(self._report_axis)
-        }
+        return MeterResultDict(
+            {
+                f"{self._abbr}{i}": to_float(means[num])
+                for num, i in enumerate(self._report_axis)
+            }
+        )
 
     def detailed_summary(self) -> dict:
         means, stds = self.value()
-        return {
-            **{
-                f"{self._abbr}{i}": to_float(means[num])
-                for num, i in enumerate(self._report_axis)
-            },
-            **{
-                f"{self._abbr}{i}": to_float(stds[num].item())
-                for num, i in enumerate(self._report_axis)
-            },
-        }
+        return MeterResultDict(
+            {
+                **{
+                    f"{self._abbr}{i}": to_float(means[num])
+                    for num, i in enumerate(self._report_axis)
+                },
+                **{
+                    f"{self._abbr}{i}": to_float(stds[num].item())
+                    for num, i in enumerate(self._report_axis)
+                },
+            }
+        )
 
     def _evalue(self, pred: Tensor, target: Tensor, voxelspacing):
         """

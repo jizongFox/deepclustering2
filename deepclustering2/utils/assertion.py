@@ -164,3 +164,23 @@ def assert_list(func: Callable[[A], bool], Iters: Iterable) -> bool:
 
 def iter_average(input_iter: Iterable):
     return sum(input_iter) / len(input_iter)
+
+
+# catch exception
+
+
+class ExceptionIgnorer:
+    def __init__(self, *exception):
+        for e in exception:
+            assert issubclass(e, BaseException), e
+        self._exception = exception
+
+    def __enter__(self):
+        return None
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        if exc_type is None:
+            return True
+        if issubclass(exc_type, self._exception):
+            return True
+        raise exc_value
