@@ -286,7 +286,7 @@ def to_float(value):
         return float(value.item())
     elif type(value).__module__ == "numpy":
         return float(value.item())
-    elif type(value) in (float, int):
+    elif type(value) in (float, int, str):
         return float(value)
     elif isinstance(value, collections.Mapping):
         return {k: to_float(o) for k, o in value.items()}
