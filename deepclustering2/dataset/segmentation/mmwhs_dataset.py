@@ -1,5 +1,7 @@
+import math
 import os
 import random
+from copy import deepcopy
 from pathlib import Path
 from typing import List, Tuple
 
@@ -100,19 +102,36 @@ class MMWHSSemiInterface(MedicalDatasetSemiInterface):
             transforms=None,
             verbose=self.verbose,
         )
+        if self.labeled_ratio == 1 or self.unlabeled_ratio == 1:
+            import warnings
+
+            warnings.warn(
+                f"given self.labeled_ratio == 1 or self.unlabeled_ratio == 1, {self.__class__.__name__} returns "
+                f"train_set as the labeled and unlabeled datasets",
+                UserWarning,
+            )
+            labeled_set = train_set
+            unlabeled_set = deepcopy(train_set)
+            if labeled_transform:
+                labeled_set.set_transform(labeled_transform)
+            if unlabeled_transform:
+                unlabeled_set.set_transform(unlabeled_transform)
+            if val_transform:
+                val_set.set_transform(val_transform)
+            return labeled_set, unlabeled_set, val_set
         with FixRandomSeed(random_seed=self.seed):
             shuffled_patients = train_set.get_group_list()[:]
             random.shuffle(shuffled_patients)
             labeled_patients, unlabeled_patients = (
                 shuffled_patients[: int(len(shuffled_patients) * self.labeled_ratio)],
                 shuffled_patients[
-                    -int(len(shuffled_patients) * self.unlabeled_ratio) :
+                    -int(math.ceil(len(shuffled_patients) * self.unlabeled_ratio)) :
                 ],
             )
 
         labeled_set = SubMedicalDatasetBasedOnIndex(train_set, labeled_patients)
         unlabeled_set = SubMedicalDatasetBasedOnIndex(train_set, unlabeled_patients)
-        assert len(labeled_set) + len(unlabeled_set) <= len(
+        assert len(labeled_set) + len(unlabeled_set) == len(
             train_set
         ), "wrong on labeled/unlabeled split."
         del train_set

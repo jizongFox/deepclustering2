@@ -44,7 +44,7 @@ setup(
     entry_points={
         "console_scripts": [
             "viewer=deepclustering2.viewer.Viewer:main",
-            "clip_screencapture=deepclustering.2postprocessing.clip_images:call_from_cmd",
+            "clip_screencapture=deepclustering2.postprocessing.clip_images:call_from_cmd",
             "report=deepclustering2.postprocessing.report2:call_from_cmd",
         ]
     },
