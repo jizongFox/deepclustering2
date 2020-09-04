@@ -144,8 +144,8 @@ class TrainerIOMixin(_BufferMixin, metaclass=ABCMeta):
         shutil.move(str(self._save_dir), str(save_dir))
         shutil.rmtree(str(self._save_dir), ignore_errors=True)
 
-    def resume_from_checkpoint(self, checkpoint):
-        pass
+    def resume_from_checkpoint(self, checkpoint, **kwargs):
+        self.load_state_dict_from_path(checkpoint, **kwargs)
 
     def save(self, current_score: float, path=None):
         self._save_to(save_name="last.pth", path=path)
