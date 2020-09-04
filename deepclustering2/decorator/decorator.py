@@ -82,6 +82,21 @@ class TimeBlock:
         return exc_type is None
 
 
+class TikTok:
+
+    def __init__(self) -> None:
+        self._prev_time = time.time()
+        self._cur_time = time.time()
+
+    def tik(self):
+        self._prev_time = self._cur_time
+        self._cur_time = time.time()
+
+    @property
+    def cost(self):
+        return self._cur_time - self._prev_time
+
+
 def timethis(func):
     """
     Decorator that reports the execution time.
