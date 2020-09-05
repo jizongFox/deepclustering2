@@ -133,6 +133,8 @@ def yaml_load(yaml_path: Union[Path, str], verbose=False) -> Dict[str, Any]:
     if yaml_path.is_dir():
         if (yaml_path / "config.yaml").exists():
             yaml_path = yaml_path / "config.yaml"
+        else:
+            raise FileNotFoundError(f"config.yaml does not found in {str(yaml_path)}")
 
     with open(str(yaml_path), "r") as stream:
         data_loaded: dict = yaml.safe_load(stream)

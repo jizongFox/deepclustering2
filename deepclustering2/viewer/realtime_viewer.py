@@ -142,8 +142,10 @@ def multi_slice_viewer_debug(
         assert len(row_axs) == col_num
         for _col_num, ax in enumerate(row_axs):
             ax.img_volume = tensor2plotable(img_volume[_row_num])
+            min_value, max_value = ax.img_volume.min(), ax.img_volume.max()
+
             ax.index = ax.img_volume.shape[0] // 2
-            ax.imshow(ax.img_volume[ax.index], cmap="gray")
+            ax.imshow(ax.img_volume[ax.index], cmap="gray", vmin=min_value, vmax=max_value)
             ax.gt_volume = (
                 None
                 if _empty_iterator(gt_volumes)
