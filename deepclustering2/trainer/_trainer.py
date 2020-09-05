@@ -2,12 +2,11 @@ from abc import ABCMeta, abstractmethod
 from typing import Callable, Optional, Union
 
 import torch
-from torch import nn
-
 from deepclustering2.meters2.meter_interface import EpochResultDict
 from deepclustering2.meters2.storage_interface import Storage, StorageIncomeDict
 from deepclustering2.models import Model
 from deepclustering2.writer import SummaryWriter
+from torch import nn
 
 
 class _Trainer(metaclass=ABCMeta):
@@ -27,12 +26,12 @@ class _Trainer(metaclass=ABCMeta):
         super(_Trainer, self).__init__(*args, **kwargs)
         self._storage = Storage()
 
-    def start_training(self):
+    def start_training(self, *args, **kwargs):
         self.to(self._device)
         with SummaryWriter(str(self._save_dir)) as self._writer:
-            return self._start_training()
+            return self._start_training(*args, **kwargs)
 
-    def _start_training(self):
+    def _start_training(self, *args, **kwargs):
         for self._cur_epoch in range(self._start_epoch, self._max_epoch):
             train_result: EpochResultDict
             eval_result: EpochResultDict
