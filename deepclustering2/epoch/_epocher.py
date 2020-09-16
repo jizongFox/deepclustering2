@@ -5,9 +5,11 @@ from functools import wraps
 from typing import Union, Tuple
 
 import torch
+from torch import nn
+
 from deepclustering2.meters2 import MeterInterface, EpochResultDict
 from deepclustering2.models.models import Model
-from torch import nn
+from deepclustering2.tqdm import tqdm
 
 
 def proxy_trainer(func):
@@ -23,13 +25,25 @@ def proxy_trainer(func):
 
 class _Epocher(metaclass=ABCMeta):
     def __init__(
-        self, model: Union[Model, nn.Module], cur_epoch=0, device="cpu"
+        self,
+        model: Union[Model, nn.Module],
+        num_batches: int = None,
+        cur_epoch=0,
+        device="cpu",
     ) -> None:
         super().__init__()
         self._model = model
         self._device = device
+        self._num_batches = num_batches
         self._cur_epoch = cur_epoch
-        self.meters: MeterInterface = None  # to be defined at context manager.
+
+    @property
+    def device(self):
+        return (
+            self._device
+            if isinstance(self._device, torch.device)
+            else torch.device(self._device)
+        )
 
     def init(self, *args, **kwargs):
         pass
@@ -37,6 +51,16 @@ class _Epocher(metaclass=ABCMeta):
     @classmethod
     def create_from_trainer(cls, trainer):
         pass
+
+    @contextmanager
+    def _register_indicator(self):
+        assert isinstance(
+            self._num_batches, int
+        ), f"self._num_batches must be provided as an integre, given {self._num_batches}."
+        indicator = tqdm(range(self._num_batches))
+        indicator = indicator.set_desc_from_epocher(self)
+        yield indicator
+        indicator._print_description()
 
     @contextmanager
     def _register_meters(self):
@@ -59,10 +83,10 @@ class _Epocher(metaclass=ABCMeta):
         self, *args, **kwargs
     ) -> Union[EpochResultDict, Tuple[EpochResultDict, float]]:
         self.to(self._device)
-        with self._register_meters() as self.meters:
+        with self._register_meters() as self.meters, self._register_indicator() as self._indicator:
             return self._run(*args, **kwargs)
 
-    def to(self, device="cpu"):
+    def to(self, device: torch.device = torch.device("cpu")):
         if isinstance(device, str):
             device = torch.device(device)
         assert isinstance(device, torch.device)
