@@ -105,7 +105,7 @@ class tqdm(_tqdm):
         return self
 
     def set_desc_from_epocher(self, epocher):
-        des = f"{epocher.__class__.__name__} {epocher._cur_epoch}"
+        des = f"{epocher.__class__.__name__:<15} {epocher._cur_epoch:03d}"
         return self.set_description(desc=des)
 
     def __exit__(self, exc_type, exc_val, exc_tb):

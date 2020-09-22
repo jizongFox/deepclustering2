@@ -40,9 +40,7 @@ class _BufferMixin:
             _buffers = self.__dict__["_buffers"]
             if name in _buffers:
                 return _buffers[name]
-        raise AttributeError(
-            "'{}' object has no attribute '{}'".format(type(self).__name__, name)
-        )
+        raise AttributeError(name)
 
     def __setattr__(self, name, value):
         buffers = self.__dict__.get("_buffers")
