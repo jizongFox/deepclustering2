@@ -5,6 +5,7 @@ from functools import wraps
 from typing import Union, Tuple
 
 import torch
+import torch.distributed as dist
 from torch import nn
 
 from deepclustering2.meters2 import MeterInterface, EpochResultDict
@@ -86,7 +87,7 @@ class _Epocher(metaclass=ABCMeta):
         with self._register_meters() as self.meters, self._register_indicator() as self._indicator:
             return self._run(*args, **kwargs)
 
-    def to(self, device: torch.device = torch.device("cpu")):
+    def to(self, device: Union[torch.device, str] = torch.device("cpu")):
         if isinstance(device, str):
             device = torch.device(device)
         assert isinstance(device, torch.device)
@@ -99,3 +100,13 @@ class _Epocher(metaclass=ABCMeta):
 
     def set_trainer(self, trainer):
         self.trainer = weakref.proxy(trainer)
+
+    @property
+    def rank(self):
+        try:
+            return dist.get_rank()
+        except AssertionError:
+            return None
+
+    def is_master(self):
+        return self.rank == 0

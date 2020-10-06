@@ -13,11 +13,13 @@ def path2Path(path) -> Path:
 
 
 class SummaryWriter(_SummaryWriter):
-    def __init__(self, log_dir=None, comment="", **kwargs):
+    def __init__(self, log_dir=None, comment="", flush_secs=5, **kwargs):
         log_dir = path2Path(log_dir)
         log_dir.mkdir(exist_ok=True, parents=True)
         assert log_dir.exists() and log_dir.is_dir(), log_dir
-        super().__init__(str(log_dir / "tensorboard"), comment, **kwargs)
+        super().__init__(
+            str(log_dir / "tensorboard"), comment, flush_secs=flush_secs, **kwargs
+        )
         atexit.register(self.close)
 
     def add_scalar_with_tag(
