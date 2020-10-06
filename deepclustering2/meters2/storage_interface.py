@@ -41,15 +41,16 @@ class _IOMixin:
 
     def to_csv(self, path, name="storage.csv"):
         path = path2Path(path)
-        assert path.is_dir(), path
         path.mkdir(exist_ok=True, parents=True)
         self.summary().to_csv(path / name)
 
 
 class Storage(_IOMixin, metaclass=ABCMeta):
-    def __init__(self) -> None:
+    def __init__(self, csv_save_dir=None, csv_name="storage.csv") -> None:
         super().__init__()
         self._storage = defaultdict(HistoricalContainer)
+        self._csv_save_dir = csv_save_dir
+        self._csv_name = csv_name
 
     def __enter__(self):
         return self
@@ -62,14 +63,20 @@ class Storage(_IOMixin, metaclass=ABCMeta):
     ):
         self._storage[prefix + name + postfix].add(value, epoch)
 
-    def put_all(self, epoch_result: EpochResultDict = None, epoch=None):
+    def put_all(
+        self, result_name: str, epoch_result: EpochResultDict = None, epoch=None
+    ):
+        assert isinstance(result_name, str), result_name
         if epoch_result:
             for k, v in epoch_result.items():
-                self.put(k, v, epoch)
+                self.put(result_name + "_" + k, v, epoch)
 
     def put_from_dict(self, income_dict: StorageIncomeDict, epoch: int = None):
         for k, v in income_dict.__dict__.items():
-            self.put_all(v, epoch)
+            self.put_all(k, v, epoch)
+
+        if self._csv_save_dir:
+            self.to_csv(self._csv_save_dir, name=self._csv_name)
 
     def get(self, name, epoch=None):
         assert name in self._storage, name
@@ -82,15 +89,18 @@ class Storage(_IOMixin, metaclass=ABCMeta):
         summary on the list of sub summarys, merging them together.
         :return:
         """
-        list_of_summary = [
-            rename_df_columns(v.summary(), k) for k, v in self._storage.items()
-        ]
-        # merge the list
-        summary = functools.reduce(
-            lambda x, y: pd.merge(x, y, left_index=True, right_index=True),
-            list_of_summary,
-        )
-        return pd.DataFrame(summary)
+        try:
+            list_of_summary = [
+                rename_df_columns(v.summary(), k) for k, v in self._storage.items()
+            ]
+            # merge the list
+            summary = functools.reduce(
+                lambda x, y: pd.merge(x, y, left_index=True, right_index=True),
+                list_of_summary,
+            )
+            return pd.DataFrame(summary)
+        except TypeError:
+            return pd.DataFrame()
 
     @property
     def meter_names(self, sorted=False) -> List[str]:

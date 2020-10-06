@@ -1,3 +1,4 @@
+import warnings
 from abc import ABCMeta
 from copy import deepcopy
 from pathlib import Path
@@ -5,17 +6,17 @@ from typing import TypeVar
 
 import numpy as np
 import torch
+from torch import Tensor
+
 from deepclustering2 import PROJECT_PATH
 from deepclustering2.models.models import Model
 from deepclustering2.utils.io import path2Path, path2str, write_yaml
-from torch import Tensor
-
 from ._buffer import _BufferMixin
 
 N = TypeVar("N", int, float, Tensor, np.ndarray)
 
 
-class TrainerIOMixin(_BufferMixin, metaclass=ABCMeta):
+class _TrainerIOMixin(_BufferMixin, metaclass=ABCMeta):
     _save_dir: str
     _model: Model
 
@@ -27,7 +28,7 @@ class TrainerIOMixin(_BufferMixin, metaclass=ABCMeta):
         save_dir: str = None,
         max_epoch: int = None,
         num_batches: int = None,
-        configuration=None,
+        config=None,
         *args,
         **kwargs,
     ) -> None:
@@ -35,21 +36,24 @@ class TrainerIOMixin(_BufferMixin, metaclass=ABCMeta):
         assert isinstance(save_dir, str), save_dir
         if not Path(save_dir).is_absolute():
             save_dir = str(Path(self.RUN_PATH) / save_dir)
+
         # self._register_buffer("_save_dir", save_dir)
         self._save_dir = save_dir
         Path(self._save_dir).mkdir(exist_ok=True, parents=True)
-        # self._register_buffer("_max_epoch", max_epoch)
-        self._register_buffer("_best_score", -1)
-        self._register_buffer("_start_epoch", 0)
-        self._register_buffer("_cur_epoch", 0)
+
         self._max_epoch = max_epoch
         self._num_batches = num_batches  # it can be changed when debugging
-        self._config = deepcopy(configuration)
+        self._register_buffer("_config", deepcopy(config))
+
         if self._config:
             write_yaml(self._config, save_dir, save_name="config.yaml")
 
-    def state_dict(self) -> dict:
-        buffer_state_dict = self._buffer_state_dict()
+        self._register_buffer("_best_score", -1)
+        self._register_buffer("_start_epoch", 0)
+        self._register_buffer("_cur_epoch", 0)
+
+    def state_dict(self, *args, **kwargs) -> dict:
+        buffer_state_dict = super(_TrainerIOMixin, self).state_dict()
         local_modules = {k: v for k, v in self.__dict__.items() if k != "_buffers"}
 
         local_state_dict = {}
@@ -66,12 +70,13 @@ class TrainerIOMixin(_BufferMixin, metaclass=ABCMeta):
         :return:
         """
         missing_keys = []
-        unexpected_keys = []
         er_msgs = []
 
         for module_name, module in self.__dict__.items():
             if module_name == "_buffers":
-                self._load_buffer_state_dict(state_dict["_buffers"])
+                super(_TrainerIOMixin, self).load_state_dict(state_dict["_buffers"])
+                continue
+
             if hasattr(module, "load_state_dict") and callable(
                 getattr(module, "load_state_dict", None)
             ):
@@ -92,8 +97,6 @@ class TrainerIOMixin(_BufferMixin, metaclass=ABCMeta):
                     )
                 )
             else:
-                import warnings
-
                 warnings.warn(
                     RuntimeWarning(
                         "Error(s) in loading state_dict for {}:\n\t{}".format(
@@ -104,54 +107,42 @@ class TrainerIOMixin(_BufferMixin, metaclass=ABCMeta):
         if self._cur_epoch > self._start_epoch:
             self._start_epoch = self._cur_epoch + 1
 
-    def load_state_dict_from_path(self, path, *args, **kwargs) -> None:
+    def load_state_dict_from_path(self, path, name="last.pth", *args, **kwargs) -> None:
         path = path2Path(path)
         assert path.exists(), path
         if path.is_file() and path.suffix in (".pth", ".pt"):
             path = path
-        elif path.is_dir() and (path / "last.pth").exists():
-            path = path / "last.pth"
+        elif path.is_dir() and (path / name).exists():
+            path = path / name
         else:
             raise FileNotFoundError(path)
         state_dict = torch.load(path2str(path), map_location="cpu")
         self.load_state_dict(state_dict, *args, **kwargs)
 
-    def _save_to(self, save_name, path=None):
+    def _save_to(self, save_dir=None, save_name=None):
         assert path2Path(save_name).suffix in (".pth", ".pt"), path2Path(
             save_name
         ).suffix
-        if path is None:
-            path = self._save_dir
-        path = path2Path(path)
-        path.mkdir(parents=True, exist_ok=True)
+        if save_dir is None:
+            save_dir = self._save_dir
+        save_dir = path2Path(save_dir)
+        save_dir.mkdir(parents=True, exist_ok=True)
         state_dict = self.state_dict()
-        torch.save(state_dict, path2str(path / save_name))
-
-    def clean_up(self, wait_time=15):
-        """
-        Do not touch
-        :return:
-        """
-        import shutil
-        import time
-
-        time.sleep(wait_time)  # to prevent that the call_draw function is not ended.
-        Path(self.ARCHIVE_PATH).mkdir(exist_ok=True, parents=True)
-        sub_dir = self._save_dir.relative_to(Path(self.RUN_PATH))
-        save_dir = Path(self.ARCHIVE_PATH) / str(sub_dir)
-        if Path(save_dir).exists():
-            shutil.rmtree(save_dir, ignore_errors=True)
-        shutil.move(str(self._save_dir), str(save_dir))
-        shutil.rmtree(str(self._save_dir), ignore_errors=True)
+        torch.save(state_dict, path2str(save_dir / save_name))
 
     def resume_from_checkpoint(self, checkpoint, **kwargs):
         self.load_state_dict_from_path(checkpoint, **kwargs)
 
-    def save(self, current_score: float, path=None):
-        self._save_to(save_name="last.pth", path=path)
-        if self._best_score < current_score:
-            self._best_score = current_score
-            self._save_to(save_name="best.pth", path=path)
+    def save_on_score(self, current_score: float, save_dir=None, high_is_better=True):
+        self._save_to(save_name="last.pth", save_dir=save_dir)
+        if high_is_better:
+            if self._best_score < current_score:
+                self._best_score = current_score
+                self._save_to(save_name="best.pth", save_dir=save_dir)
+        else:
+            if self._best_score > current_score:
+                self._best_score = current_score
+                self._save_to(save_name="best.pth", save_dir=save_dir)
 
-    def periodic_save(self, cur_epoch: int, path: str = None):
-        self._save_to(save_name=f"epoch_{cur_epoch}.pth", path=path)
+    def periodic_save(self, cur_epoch: int, save_dir: str = None):
+        self._save_to(save_name=f"epoch_{cur_epoch}.pth", save_dir=save_dir)

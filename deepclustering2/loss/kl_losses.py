@@ -100,7 +100,7 @@ class KL_div(nn.Module):
             else:
                 self._weight = weight.float()
             # normalize weight:
-            self._weight = self._weight / self._weight.sum()
+            self._weight = self._weight / self._weight.sum()  * len(self._weight)
         if verbose:
             print(f"Initialized {self.__class__.__name__} \nwith weight={self._weight} and reduction={self._reduction}.")
 

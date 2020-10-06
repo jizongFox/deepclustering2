@@ -1,5 +1,6 @@
 from deepclustering2.utils import nice_dict
-from ._epocher import _Epocher
+from ._epocher import _Epocher, proxy_trainer
+
 
 
 class EpochResult(dict):

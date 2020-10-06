@@ -2,7 +2,7 @@ from torch import Tensor
 
 from .convert2apex import AMPGradientBackwardStep, to_Apex
 from .models import Model, NormalGradientBackwardStep, DPModel
-from .ema import EMA_Model
+from .ema import EMA_Model, ema_updater
 
 
 def ZeroGradientBackwardStep(loss: Tensor, model: Model):

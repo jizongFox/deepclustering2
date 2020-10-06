@@ -3,8 +3,6 @@ from typing import Union, List
 
 import numpy as np
 import torch
-from torch import Tensor
-
 from deepclustering2.meters2.individual_meters._metric import _Metric, MeterResultDict
 from deepclustering2.type import to_float
 from deepclustering2.utils import iter_average as average_list
@@ -14,6 +12,7 @@ from deepclustering2.utils import (
     class2one_hot,
     probs2one_hot,
 )
+from torch import Tensor
 
 
 class UniversalDice(_Metric):
@@ -80,7 +79,9 @@ class UniversalDice(_Metric):
             if isinstance(group_name, str):
                 # this is too make 3D dice.
                 current_group_name = [group_name] * B
-        assert isinstance(current_group_name, list)
+        assert isinstance(current_group_name, (list, tuple))
+        if isinstance(current_group_name, tuple):
+            current_group_name = list(current_group_name)
         interaction, union = (
             self._intersaction(onehot_pred, onehot_target),
             self._union(onehot_pred, onehot_target),

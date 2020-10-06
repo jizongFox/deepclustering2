@@ -109,7 +109,7 @@ class Model(metaclass=ABCMeta):
             )
             if "warmup" in scheduler_dict:
                 # encode warmup scheduler
-                from deepclustering.schedulers import GradualWarmupScheduler
+                from deepclustering2.schedulers import GradualWarmupScheduler
 
                 self._scheduler = GradualWarmupScheduler(  # type: ignore
                     optimizer=self._optimizer,
@@ -176,7 +176,7 @@ class Model(metaclass=ABCMeta):
 
     def get_lr(self):
         if self._scheduler is not None:
-            return self._scheduler.get_last_lr()
+            return self._scheduler.get_lr()
         warnings.warn("No scheduler is found while calling for `get_lr()`")
         return [0]
 
@@ -267,6 +267,20 @@ class Model(metaclass=ABCMeta):
         model.load_state_dict(state_dict=state_dict)
         model.to(torch.device("cpu"))
         return model
+
+    def share_optimizer(self, torch_net: nn.Module):
+        """
+        share optimizer and scheduler of a given model to a new torchnet
+        :param torch_net:
+        :return: self
+        """
+        optimizer_type = self._optim_dict["name"]
+        new_optimizer = getattr(optim, optimizer_type)(
+            [{"param": self._torchnet.parameters()}, {"param": torch_net.parameters()}],
+            **{k: v for k, v in self._optim_dict.items() if k != "name"},
+        )
+        # scheduler_type
+        return self
 
 
 class DPModel(Model):

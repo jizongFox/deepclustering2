@@ -1,4 +1,4 @@
-from pathlib import Path, PosixPath
+from pathlib import Path
 from pprint import pprint
 
 __all__ = ["YAMLArgParser", "yaml_load", "str2bool"]
@@ -11,6 +11,7 @@ from typing import List, Dict, Any, Union, Tuple, Optional
 import yaml
 
 from ._utils import dict_merge
+from ..utils import path2Path
 
 
 class YAMLArgParser:
@@ -127,7 +128,14 @@ def yaml_load(yaml_path: Union[Path, str], verbose=False) -> Dict[str, Any]:
     :param verbose:
     :return:
     """
-    assert isinstance(yaml_path, (Path, str, PosixPath)), type(yaml_path)
+    yaml_path = path2Path(yaml_path)
+    assert path2Path(yaml_path).exists(), yaml_path
+    if yaml_path.is_dir():
+        if (yaml_path / "config.yaml").exists():
+            yaml_path = yaml_path / "config.yaml"
+        else:
+            raise FileNotFoundError(f"config.yaml does not found in {str(yaml_path)}")
+
     with open(str(yaml_path), "r") as stream:
         data_loaded: dict = yaml.safe_load(stream)
     if verbose:

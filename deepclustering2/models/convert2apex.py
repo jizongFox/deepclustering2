@@ -9,7 +9,6 @@ from .models import Model
 try:
     from apex import amp
 except ImportError:
-    warnings.warn("Apex not installed, using PyTorch default setting.", RuntimeWarning)
     amp = None
 
 

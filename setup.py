@@ -8,13 +8,6 @@ with open(path.join(this_directory, "README.md"), encoding="utf-8") as f:
     long_description = f.read()
 setup(
     name="deepclustering2",
-    # entry_points={
-    #     "console_scripts": [
-    #         "viewer=deepclustering.viewer.Viewer:main",
-    #         "clip_screencapture=deepclustering.postprocessing.clip_images:call_from_cmd",
-    #         "report=deepclustering.postprocessing.report2:call_from_cmd",
-    #     ]
-    # },
     version="2.0.0",
     packages=find_packages(exclude=[".data", "script", "test", "runs", "config"]),
     url="https://github.com/jizongFox/deep-clustering-toolbox",
@@ -48,4 +41,11 @@ setup(
         "gdown",
         "torch_optimizer",
     ],
+    entry_points={
+        "console_scripts": [
+            "viewer=deepclustering2.viewer.Viewer:main",
+            "clip_screencapture=deepclustering2.postprocessing.clip_images:call_from_cmd",
+            "report=deepclustering2.postprocessing.report2:call_from_cmd",
+        ]
+    },
 )

@@ -103,6 +103,10 @@ class tqdm(_tqdm):
             self.refresh()
         return self
 
+    def set_desc_from_epocher(self, epocher):
+        des = f"{epocher.__class__.__name__:<15} {epocher._cur_epoch:03d}"
+        return self.set_description(desc=des)
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._print_description()
         self.close()
@@ -139,6 +143,7 @@ class tqdm(_tqdm):
         )
         if refresh:
             self.refresh()
+        self._post_dict_cache = ordered_dict
 
     @staticmethod
     def format_num(n):

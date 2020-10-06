@@ -250,7 +250,11 @@ def is_tuple_or_list(val):
 
 # convert
 def to_numpy(tensor):
-    if is_np_array(tensor) or is_np_scalar(tensor) or isinstance(tensor, numbers.Number):
+    if (
+        is_np_array(tensor)
+        or is_np_scalar(tensor)
+        or isinstance(tensor, numbers.Number)
+    ):
         return tensor
     elif torch.is_tensor(tensor):
         return tensor.cpu().detach().numpy()
@@ -282,7 +286,7 @@ def to_float(value):
         return float(value.item())
     elif type(value).__module__ == "numpy":
         return float(value.item())
-    elif type(value) in (float, int):
+    elif type(value) in (float, int, str):
         return float(value)
     elif isinstance(value, collections.Mapping):
         return {k: to_float(o) for k, o in value.items()}
@@ -292,7 +296,7 @@ def to_float(value):
         raise TypeError(f"{value.__class__.__name__} cannot be converted to float.")
 
 
-def to_device(obj, device="cpu", non_blocking=True):
+def to_device(obj, device, non_blocking=True):
     """
     Copy an object to a specific device asynchronizedly. If the param `main_stream` is provided,
     the copy stream will be synchronized with the main one.
@@ -310,7 +314,7 @@ def to_device(obj, device="cpu", non_blocking=True):
     if torch.is_tensor(obj):
         v = obj.to(device, non_blocking=non_blocking)
         return v
-    elif isinstance(obj, collections.Mapping):
+    elif isinstance(obj, collections.abc.Mapping):
         return {k: to_device(o, device, non_blocking) for k, o in obj.items()}
     elif isinstance(obj, (tuple, list, collections.UserList)):
         return [to_device(o, device, non_blocking) for o in obj]

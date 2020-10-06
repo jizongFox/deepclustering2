@@ -1,16 +1,18 @@
 from pathlib import Path, PosixPath
 from pprint import pprint
-from typing import Union, Dict, Any
+from typing import Union, Dict, Any, TypeVar
 
 import yaml
 
+T_path = TypeVar("T_path", str, Path)
 
-def path2Path(path):
+
+def path2Path(path: T_path) -> Path:
     assert isinstance(path, (Path, str)), type(path)
     return Path(path) if isinstance(path, str) else path
 
 
-def path2str(path):
+def path2str(path: T_path) -> str:
     assert isinstance(path, (Path, str)), type(path)
     return str(path)
 
@@ -40,7 +42,7 @@ def write_yaml(
             save_name = (
                 save_name.split(".")[0] + "_copy" + "." + save_name.split(".")[1]
             )
-    with open(str(save_dir / save_name), "w") as outfile:  # type: ignore
+    with open(str(save_path), "w") as outfile:  # type: ignore
         yaml.dump(dictionary, outfile, default_flow_style=False)
 
 

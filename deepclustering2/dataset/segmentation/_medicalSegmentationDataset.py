@@ -160,10 +160,10 @@ class MedicalImageSegmentationDataset(Dataset):
         )
 
     def set_transform(self, transform: SequentialWrapper) -> None:
-        if not isinstance(transform, SequentialWrapper):
-            raise TypeError(
-                f"`transform` must be instance of `SequentialWrapper`, given {type(transform)}."
-            )
+        # if not isinstance(transform, SequentialWrapper):
+        #     raise TypeError(
+        #         f"`transform` must be instance of `SequentialWrapper`, given {type(transform)}."
+        #     )
         self._transform = transform
 
     @property

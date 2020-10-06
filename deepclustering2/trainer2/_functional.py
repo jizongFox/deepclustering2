@@ -1,4 +1,5 @@
 from abc import ABCMeta
+from warnings import warn
 
 import torch
 from torch.optim.lr_scheduler import _LRScheduler as Tsch
@@ -32,11 +33,12 @@ def scheduler_to(sched, device):
                 param._grad.data = param._grad.data.to(device)
 
 
-class TrainerFuncMixin(metaclass=ABCMeta):
+class _TrainerFuncMixin(metaclass=ABCMeta):
     _model: Model
     _device: torch.device
 
-    def to(self, device):
+    def to(self, device, strict=True):
+        error_message = []
         for module_name, module in self.__dict__.items():
             if isinstance(module, (DOptim, TOptim)):
                 optimizer_to(module, device)
@@ -47,7 +49,27 @@ class TrainerFuncMixin(metaclass=ABCMeta):
             if hasattr(module, "to") and callable(module.to):
                 try:
                     module.to(device=device)
-
                 except Exception as e:
-                    print(e)
+                    error_message.append(e)
                     continue
+        if len(error_message) > 0:
+            if strict is True:
+                raise RuntimeError(
+                    (
+                        "Error(s) in to {} for {}:\n\t{}".format(
+                            device,
+                            self.__class__.__name__,
+                            "\n\t".join([str(x) for x in error_message]),
+                        )
+                    )
+                )
+            else:
+                warn(
+                    RuntimeWarning(
+                        "Error(s) in to {} for {}:\n\t{}".format(
+                            device,
+                            self.__class__.__name__,
+                            "\n\t".join([str(x) for x in error_message]),
+                        )
+                    )
+                )

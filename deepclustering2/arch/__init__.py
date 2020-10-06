@@ -23,6 +23,8 @@ _register_arch = partial(_register, CALLABLE_DICT=ARCH_CALLABLES)
 """
 Public interface
 """
+_register_arch("enet", Enet)
+_register_arch("unet", UNet)
 
 
 def get_arch(arch: str, kwargs) -> nn.Module:

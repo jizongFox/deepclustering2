@@ -7,40 +7,42 @@ from typing import *
 
 import numpy as np
 import torch
+from deepclustering2.utils import assert_list
 from torch.nn import functional as F
 
 T = Union[np.ndarray, torch.Tensor]
 _Tensor = (np.ndarray, torch.Tensor)
 
 
-class Compose(object):
-    """Composes several transforms together.
+class TensorRandomFlip:
+    def __init__(self, axis=None, threshold=0.5) -> None:
+        if isinstance(axis, int):
+            self._axis = [axis]
+        elif isinstance(axis, (list, tuple)):
+            assert_list(lambda x: isinstance(x, int), axis), axis
+            self._axis = axis
+        elif axis is None:
+            self._axis = axis
+        else:
+            raise ValueError(str(axis))
+        assert 0 <= threshold <= 1
+        self._threshold = threshold
 
-    Args:
-        transforms (list of ``Transform`` objects): list of transforms to compose.
-
-    Example:
-        >>> transforms.Compose([
-        >>>     transforms.CenterCrop(10),
-        >>>     transforms.ToTensor(),
-        >>> ])
-    """
-
-    def __init__(self, transforms):
-        self.transforms = transforms
-
-    def __call__(self, img):
-        for t in self.transforms:
-            img = t(img)
-        return img
+    def __call__(self, tensor: torch.Tensor):
+        tensor = tensor.clone()
+        if self._axis is not None:
+            for _one_axis in self._axis:
+                if random.random() < self._threshold:
+                    tensor = tensor.flip(_one_axis)
+            return tensor
+        else:
+            return tensor
 
     def __repr__(self):
-        format_string = self.__class__.__name__ + "("
-        for t in self.transforms:
-            format_string += "\n"
-            format_string += "    {0}".format(t)
-        format_string += "\n)"
-        return format_string
+        string = f"{self.__class__.__name__}"
+        axis = "" if not self._axis else f" with axis={self._axis}."
+
+        return string + axis
 
 
 class TensorCutout(object):

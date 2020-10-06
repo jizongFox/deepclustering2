@@ -1,8 +1,9 @@
 import numpy as np
 import torch
+from deepclustering2.type import to_float
 
+from ._metric import _Metric, MeterResultDict
 from .confusionmatrix import ConfusionMatrix
-from ._metric import _Metric
 
 
 class IoU(_Metric):
@@ -23,7 +24,7 @@ class IoU(_Metric):
     when computing the IoU. Can be an int, or any iterable of ints.
     """
 
-    def __init__(self, num_classes, normalized=False, ignore_index=255):
+    def __init__(self, num_classes, normalized=False, ignore_index=255, report_axis=None):
         super().__init__()
         self.num_classes = num_classes
         self.conf_metric = ConfusionMatrix(
@@ -39,6 +40,9 @@ class IoU(_Metric):
                 self.ignore_index = tuple(ignore_index)
             except TypeError:
                 raise ValueError("'ignore_index' must be an int or iterable")
+        self._report_axis = list(range(num_classes))
+        if report_axis is not None:
+            self._report_axis = report_axis
 
     def reset(self):
         self.conf_metric.reset()
@@ -121,7 +125,10 @@ class IoU(_Metric):
         }
 
     def summary(self) -> dict:
-        return {
-            f"{k}": v
-            for k, v in zip(range(self.num_classes), self.value()["Class_IoU"])
-        }
+        values = self.value()["Class_IoU"]
+        return MeterResultDict(to_float({
+            f"{k}": values[k]
+            for k in self._report_axis}))
+
+    def detailed_summary(self) -> MeterResultDict:
+        return self.summary()

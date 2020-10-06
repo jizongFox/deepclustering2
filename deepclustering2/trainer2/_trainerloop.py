@@ -1,15 +1,16 @@
 from abc import ABCMeta, abstractmethod
-from typing import Callable, Optional, Union
+from typing import Callable, Union
 
 import torch
+from torch import nn
+
 from deepclustering2.meters2.meter_interface import EpochResultDict
 from deepclustering2.meters2.storage_interface import Storage, StorageIncomeDict
 from deepclustering2.models import Model
 from deepclustering2.writer import SummaryWriter
-from torch import nn
 
 
-class _Trainer(metaclass=ABCMeta):
+class _TrainerLoop(metaclass=ABCMeta):
     """
     This is the main logic of the trainer without considering inference, meters and etc.
     """
@@ -20,10 +21,12 @@ class _Trainer(metaclass=ABCMeta):
     _max_epoch: int
     _cur_epoch: int
     _save_dir: str
-    save: Callable[[float, Optional[str]], None]
+    _device: Union[str, torch.device]
+    save_on_score: Callable
+    to: Callable[[torch.device], None]
 
     def __init__(self, *args, **kwargs):
-        super(_Trainer, self).__init__(*args, **kwargs)
+        super(_TrainerLoop, self).__init__(*args, **kwargs)
         self._storage = Storage()
 
     def start_training(self, *args, **kwargs):
@@ -43,10 +46,13 @@ class _Trainer(metaclass=ABCMeta):
             self._model.schedulerStep()
             storage_per_epoch = StorageIncomeDict(tra=train_result, val=eval_result)
             self._storage.put_from_dict(storage_per_epoch, self._cur_epoch)
-            for k, v in storage_per_epoch.__dict__.items():
-                self._writer.add_scalar_with_tag(k, v, global_step=self._cur_epoch)
+            self._writer.add_scalar_with_StorageDict(
+                storage_per_epoch, epoch=self._cur_epoch
+            )
             # save_checkpoint
-            self.save(cur_score)
+            self.save_on_score(
+                current_score=cur_score, save_dir=self._save_dir, high_is_better=True
+            )
             # save storage result on csv file.
             self._storage.to_csv(self._save_dir)
 

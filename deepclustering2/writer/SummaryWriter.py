@@ -3,6 +3,7 @@ from pathlib import Path
 
 from tensorboardX import SummaryWriter as _SummaryWriter
 
+from deepclustering2.meters2 import StorageIncomeDict
 from deepclustering2.utils import flatten_dict
 
 
@@ -12,10 +13,13 @@ def path2Path(path) -> Path:
 
 
 class SummaryWriter(_SummaryWriter):
-    def __init__(self, log_dir=None, comment="", **kwargs):
+    def __init__(self, log_dir=None, comment="", flush_secs=5, **kwargs):
         log_dir = path2Path(log_dir)
+        log_dir.mkdir(exist_ok=True, parents=True)
         assert log_dir.exists() and log_dir.is_dir(), log_dir
-        super().__init__(str(log_dir / "tensorboard"), comment, **kwargs)
+        super().__init__(
+            str(log_dir / "tensorboard"), comment, flush_secs=flush_secs, **kwargs
+        )
         atexit.register(self.close)
 
     def add_scalar_with_tag(
@@ -40,6 +44,10 @@ class SummaryWriter(_SummaryWriter):
                 global_step=global_step,
                 walltime=walltime,
             )
+
+    def add_scalar_with_StorageDict(self, storage_dict: StorageIncomeDict, epoch: int):
+        for k, v in storage_dict.__dict__.items():
+            self.add_scalar_with_tag(k, v, global_step=epoch)
 
     def __enter__(self):
         return self

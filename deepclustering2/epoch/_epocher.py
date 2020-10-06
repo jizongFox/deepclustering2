@@ -5,9 +5,23 @@ from functools import wraps
 from typing import Union, Tuple
 
 import torch
+import torch.distributed as dist
+from torch import nn
 
 from deepclustering2.meters2 import MeterInterface, EpochResultDict
 from deepclustering2.models.models import Model
+from deepclustering2.tqdm import tqdm
+
+
+def proxy_trainer(func):
+    @wraps(func)
+    def inner_func(*args, **kwargs):
+        epocher = func(*args, **kwargs)
+        if kwargs.get("trainer"):
+            epocher.set_trainer(kwargs.get("trainer"))
+        return epocher
+
+    return inner_func
 
 
 def proxy_trainer(func):
@@ -22,17 +36,43 @@ def proxy_trainer(func):
 
 
 class _Epocher(metaclass=ABCMeta):
-    def __init__(self, model: Model, cur_epoch=0, device="cpu") -> None:
+    def __init__(
+        self,
+        model: Union[Model, nn.Module],
+        num_batches: int = None,
+        cur_epoch=0,
+        device="cpu",
+    ) -> None:
         super().__init__()
         self._model = model
         self._device = device
+        self._num_batches = num_batches
         self._cur_epoch = cur_epoch
-        self.to(self._device)
+
+    @property
+    def device(self):
+        return (
+            self._device
+            if isinstance(self._device, torch.device)
+            else torch.device(self._device)
+        )
+
+    def init(self, *args, **kwargs):
+        pass
 
     @classmethod
-    @abstractmethod
     def create_from_trainer(cls, trainer):
         pass
+
+    @contextmanager
+    def _register_indicator(self):
+        assert isinstance(
+            self._num_batches, int
+        ), f"self._num_batches must be provided as an integre, given {self._num_batches}."
+        indicator = tqdm(range(self._num_batches))
+        indicator = indicator.set_desc_from_epocher(self)
+        yield indicator
+        indicator._print_description()
 
     @contextmanager
     def _register_meters(self):
@@ -54,10 +94,11 @@ class _Epocher(metaclass=ABCMeta):
     def run(
         self, *args, **kwargs
     ) -> Union[EpochResultDict, Tuple[EpochResultDict, float]]:
-        with self._register_meters() as self.meters:
+        self.to(self._device)
+        with self._register_meters() as self.meters, self._register_indicator() as self._indicator:
             return self._run(*args, **kwargs)
 
-    def to(self, device="cpu"):
+    def to(self, device: Union[torch.device, str] = torch.device("cpu")):
         if isinstance(device, str):
             device = torch.device(device)
         assert isinstance(device, torch.device)
@@ -70,3 +111,14 @@ class _Epocher(metaclass=ABCMeta):
 
     def set_trainer(self, trainer):
         self.trainer = weakref.proxy(trainer)
+
+
+    @property
+    def rank(self):
+        try:
+            return dist.get_rank()
+        except AssertionError:
+            return None
+
+    def is_master(self):
+        return self.rank == 0

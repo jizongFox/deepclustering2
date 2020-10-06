@@ -1,4 +1,5 @@
 import os
+from copy import deepcopy
 from pathlib import Path
 from typing import List, Tuple
 
@@ -80,6 +81,7 @@ class SpleenSemiInterface(MedicalDatasetSemiInterface):
         MedicalImageSegmentationDataset,
         MedicalImageSegmentationDataset,
     ]:
+
         train_set = self.DataClass(
             root_dir=self.root_dir,
             mode="train",
@@ -94,6 +96,23 @@ class SpleenSemiInterface(MedicalDatasetSemiInterface):
             transforms=None,
             verbose=self.verbose,
         )
+        if self.labeled_ratio == 1 or self.unlabeled_ratio == 1:
+            import warnings
+
+            warnings.warn(
+                f"given self.labeled_ratio == 1 or self.unlabeled_ratio == 1, {self.__class__.__name__} returns "
+                f"train_set as the labeled and unlabeled datasets",
+                UserWarning,
+            )
+            labeled_set = train_set
+            unlabeled_set = deepcopy(train_set)
+            if labeled_transform:
+                labeled_set.set_transform(labeled_transform)
+            if unlabeled_transform:
+                unlabeled_set.set_transform(unlabeled_transform)
+            if val_transform:
+                val_set.set_transform(val_transform)
+            return labeled_set, unlabeled_set, val_set
 
         labeled_patients, unlabeled_patients = train_test_split(
             train_set.get_group_list(),

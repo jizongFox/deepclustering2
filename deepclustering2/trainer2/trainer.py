@@ -1,32 +1,31 @@
 from abc import ABCMeta
-from typing import Tuple, Union
+from typing import Tuple
 
 import torch
 from torch import nn
 
-from deepclustering2.epoch._epocher import _Epocher
 from deepclustering2.meters2 import EpochResultDict
-from deepclustering2.models.models import Model
-from deepclustering2.trainer._functional import TrainerFuncMixin
-from deepclustering2.trainer._io import TrainerIOMixin
-from deepclustering2.trainer._trainer import _Trainer
+from ._functional import _TrainerFuncMixin
+from ._io import _TrainerIOMixin
+from ._trainerloop import _TrainerLoop
+from ..epoch._epocher import _Epocher  # noqa
 
 
-class Trainer(_Trainer, TrainerFuncMixin, TrainerIOMixin, metaclass=ABCMeta):
+class Trainer(_TrainerLoop, _TrainerFuncMixin, _TrainerIOMixin, metaclass=ABCMeta):
     def __init__(
         self,
-        model: Union[Model, nn.Module],
+        model: nn.Module,
         save_dir: str = "base",
         max_epoch: int = 100,
         num_batches: int = 100,
         device: str = "cpu",
-        configuration=None,
+        config=None,
     ):
         super(Trainer, self).__init__(
             save_dir=save_dir,
             max_epoch=max_epoch,
             num_batches=num_batches,
-            configuration=configuration,
+            config=config,
         )
         self._model = model
         self._device = torch.device(device)

@@ -1,4 +1,5 @@
 import numpy as np
+from collections import defaultdict
 
 from ._metric import _Metric, MeterResultDict
 
@@ -51,3 +52,26 @@ class AverageValueMeter(_Metric):
 
     def __repr__(self):
         return f"{self.__class__.__name__}: n={self.n} \t {self.detailed_summary()}"
+
+
+class MultipleAverageValueMeter(_Metric):
+    def __init__(self) -> None:
+        super().__init__()
+        self._meter_dicts = defaultdict(AverageValueMeter)
+
+    def reset(self):
+        for k, v in self._meter_dicts.items():
+            v.reset()
+
+    def add(self, *_, **kwargs):
+        for k, v in kwargs.items():
+            self._meter_dicts[k].add(v)
+
+    def summary(self) -> MeterResultDict:
+        result = {}
+        for k, v in self._meter_dicts.items():
+            result[k] = v.summary()["mean"]
+        return MeterResultDict(result)
+
+    def detailed_summary(self) -> MeterResultDict:
+        return self.summary()
