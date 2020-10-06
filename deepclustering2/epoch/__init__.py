@@ -2,6 +2,7 @@ from deepclustering2.utils import nice_dict
 from ._epocher import _Epocher, proxy_trainer
 
 
+
 class EpochResult(dict):
     def __repr__(self):
         string_info = ""

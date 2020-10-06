@@ -24,6 +24,17 @@ def proxy_trainer(func):
     return inner_func
 
 
+def proxy_trainer(func):
+    @wraps(func)
+    def inner_func(*args, **kwargs):
+        epocher = func(*args, **kwargs)
+        if kwargs.get("trainer"):
+            epocher.set_trainer(kwargs.get("trainer"))
+        return epocher
+
+    return inner_func
+
+
 class _Epocher(metaclass=ABCMeta):
     def __init__(
         self,
@@ -100,6 +111,7 @@ class _Epocher(metaclass=ABCMeta):
 
     def set_trainer(self, trainer):
         self.trainer = weakref.proxy(trainer)
+
 
     @property
     def rank(self):
