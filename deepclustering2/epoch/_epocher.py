@@ -1,3 +1,4 @@
+import sys
 import weakref
 from abc import abstractmethod, ABCMeta
 from contextlib import contextmanager
@@ -5,12 +6,12 @@ from functools import wraps
 from typing import Union, Tuple
 
 import torch
-import torch.distributed as dist
 from torch import nn
 
 from deepclustering2.meters2 import MeterInterface, EpochResultDict
 from deepclustering2.models.models import Model
 from deepclustering2.tqdm import tqdm
+from ..ddp.ddp import _DDPMixin
 
 
 def proxy_trainer(func):
@@ -24,18 +25,7 @@ def proxy_trainer(func):
     return inner_func
 
 
-def proxy_trainer(func):
-    @wraps(func)
-    def inner_func(*args, **kwargs):
-        epocher = func(*args, **kwargs)
-        if kwargs.get("trainer"):
-            epocher.set_trainer(kwargs.get("trainer"))
-        return epocher
-
-    return inner_func
-
-
-class _Epocher(metaclass=ABCMeta):
+class _Epocher(_DDPMixin, metaclass=ABCMeta):
     def __init__(
         self,
         model: Union[Model, nn.Module],
@@ -68,11 +58,13 @@ class _Epocher(metaclass=ABCMeta):
     def _register_indicator(self):
         assert isinstance(
             self._num_batches, int
-        ), f"self._num_batches must be provided as an integre, given {self._num_batches}."
+        ), f"self._num_batches must be provided as an integer, given {self._num_batches}."
+        sys.stdout.flush()
         indicator = tqdm(range(self._num_batches))
         indicator = indicator.set_desc_from_epocher(self)
         yield indicator
         indicator._print_description()
+        sys.stdout.flush()
 
     @contextmanager
     def _register_meters(self):
@@ -111,14 +103,3 @@ class _Epocher(metaclass=ABCMeta):
 
     def set_trainer(self, trainer):
         self.trainer = weakref.proxy(trainer)
-
-
-    @property
-    def rank(self):
-        try:
-            return dist.get_rank()
-        except AssertionError:
-            return None
-
-    def is_master(self):
-        return self.rank == 0

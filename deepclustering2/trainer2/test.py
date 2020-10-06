@@ -15,9 +15,11 @@ class TestBuffer(TestCase):
         buffer._register_buffer("numpy", np.random.randn(1, 1))
         buffer._register_buffer("tensor_cpu", torch.randn(1, 1))
         buffer._register_buffer("tensor_gpu", torch.randn(1, 1, device="cuda"))
+        buffer._register_buffer("none", 1)
         buffer._random_value = 12
 
         state_dict = buffer.state_dict()
+        print(state_dict)
 
         buffer2 = _BufferMixin()
         buffer2._register_buffer("string", None)
@@ -25,7 +27,8 @@ class TestBuffer(TestCase):
         buffer2._register_buffer("numpy", np.random.randn(1, 1))
         buffer2._register_buffer("tensor_cpu", torch.randn(1, 1))
         buffer2._register_buffer("tensor_gpu", torch.randn(1, 1, device="cuda"))
-        buffer2.load_state_dict(state_dict, strict=False)
+        buffer2._register_buffer("none", None)
+        buffer2.load_state_dict(state_dict, strict=True)
         print(buffer2.state_dict())
 
 

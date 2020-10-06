@@ -82,13 +82,14 @@ class _BufferMixin:
                 module
         """
         for name, buf in self._buffers.items():
-            if buf is not None:
-                value = buf
-                if isinstance(buf, Tensor):
-                    value = buf.detach()
-                if isinstance(buf, np.ndarray):
-                    value = deepcopy(buf)
-                destination[prefix + name] = value
+            value = buf
+            if isinstance(buf, Tensor):
+                value = buf.detach()
+            if isinstance(buf, np.ndarray):
+                value = deepcopy(buf)
+            if buf is None:
+                value = None
+            destination[prefix + name] = value
 
     def state_dict(self, destination=None, prefix=""):
         r"""Returns a dictionary containing a whole state of the module.

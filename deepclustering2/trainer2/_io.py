@@ -48,7 +48,7 @@ class _TrainerIOMixin(_BufferMixin, metaclass=ABCMeta):
         if self._config:
             write_yaml(self._config, save_dir, save_name="config.yaml")
 
-        self._register_buffer("_best_score", -1)
+        self._register_buffer("_best_score", None)
         self._register_buffer("_start_epoch", 0)
         self._register_buffer("_cur_epoch", 0)
 
@@ -67,6 +67,7 @@ class _TrainerIOMixin(_BufferMixin, metaclass=ABCMeta):
         """
         Load state_dict for submodules having "load_state_dict" method.
         :param state_dict:
+        :param strict: if raise error
         :return:
         """
         missing_keys = []
@@ -135,6 +136,11 @@ class _TrainerIOMixin(_BufferMixin, metaclass=ABCMeta):
 
     def save_on_score(self, current_score: float, save_dir=None, high_is_better=True):
         self._save_to(save_name="last.pth", save_dir=save_dir)
+
+        # initialize best_score, instead of None
+        if self._best_score is None:
+            self._best_score = current_score
+
         if high_is_better:
             if self._best_score < current_score:
                 self._best_score = current_score

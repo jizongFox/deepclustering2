@@ -8,9 +8,10 @@ from deepclustering2.meters2.meter_interface import EpochResultDict
 from deepclustering2.meters2.storage_interface import Storage, StorageIncomeDict
 from deepclustering2.models import Model
 from deepclustering2.writer import SummaryWriter
+from ..ddp.ddp import _DDPMixin
 
 
-class _TrainerLoop(metaclass=ABCMeta):
+class _TrainerLoop(_DDPMixin, metaclass=ABCMeta):
     """
     This is the main logic of the trainer without considering inference, meters and etc.
     """
@@ -40,21 +41,23 @@ class _TrainerLoop(metaclass=ABCMeta):
             eval_result: EpochResultDict
             cur_score: float
             train_result = self.run_epoch()
-            with torch.no_grad():
-                eval_result, cur_score = self.eval_epoch()
-            # update lr_scheduler
-            self._model.schedulerStep()
-            storage_per_epoch = StorageIncomeDict(tra=train_result, val=eval_result)
-            self._storage.put_from_dict(storage_per_epoch, self._cur_epoch)
-            self._writer.add_scalar_with_StorageDict(
-                storage_per_epoch, epoch=self._cur_epoch
-            )
-            # save_checkpoint
-            self.save_on_score(
-                current_score=cur_score, save_dir=self._save_dir, high_is_better=True
-            )
-            # save storage result on csv file.
-            self._storage.to_csv(self._save_dir)
+            if self.on_master():
+                with torch.no_grad():
+                    eval_result, cur_score = self.eval_epoch()
+            if self.on_master():
+                storage_per_epoch = StorageIncomeDict(tra=train_result, val=eval_result)
+                self._storage.put_from_dict(storage_per_epoch, self._cur_epoch)
+                self._writer.add_scalar_with_StorageDict(
+                    storage_per_epoch, epoch=self._cur_epoch
+                )
+                # save_checkpoint
+                self.save_on_score(
+                    current_score=cur_score,
+                    save_dir=self._save_dir,
+                    high_is_better=True,
+                )
+                # save storage result on csv file.
+                self._storage.to_csv(self._save_dir)
 
     def run_epoch(self, *args, **kwargs):
         return self._run_epoch(*args, **kwargs)

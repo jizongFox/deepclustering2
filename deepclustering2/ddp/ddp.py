@@ -1,4 +1,5 @@
 import os
+from typing import Optional
 
 import torch
 import torch.distributed as dist
@@ -46,3 +47,15 @@ def disable_output():
     import builtins
 
     builtins.print = print_pass
+
+
+class _DDPMixin:
+    @property
+    def rank(self) -> Optional[int]:
+        try:
+            return dist.get_rank()
+        except AssertionError:
+            return None
+
+    def on_master(self) -> bool:
+        return (self.rank == 0) or (self.rank is None)
