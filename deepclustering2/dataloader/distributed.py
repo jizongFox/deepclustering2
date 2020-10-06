@@ -1,4 +1,8 @@
 import math
+<< << << < HEAD
+== == == =
+>> >> >> > 1658
+eaa5e5240d808fceb57668b26600572fb009
 
 import torch
 import torch.distributed as dist
@@ -165,6 +169,7 @@ class InfiniteDistributedSampler(Sampler):
 
     def __iter__(self):
         continous_iter = _InfiniteRandomIterator(self.dataset, shuffle=self.shuffle)
+
         while True:
             x = next(continous_iter)
             if x % self.num_replicas == self.rank:
