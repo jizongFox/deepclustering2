@@ -9,10 +9,12 @@ from torch.backends import cudnn
 def initialize_ddp_environment(
     rank,
     ngpus_per_node,
-    dist_backend="nllc",
-    world_size=1,
+    dist_backend="nccl",
+    world_size=None,
     dist_url="tcp://localhost:11111",
 ):
+    if world_size is None:
+        world_size = ngpus_per_node
     ddp_params = {
         "rank": rank,
         "dist_backend": dist_backend,
@@ -27,6 +29,9 @@ def initialize_ddp_environment(
     dist.init_process_group(
         backend=dist_backend, init_method=dist_url, world_size=world_size, rank=rank
     )
+    if dist.get_rank() != 0:
+        disable_output()
+        # pass
     return ddp_params
 
 
