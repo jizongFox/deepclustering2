@@ -16,3 +16,6 @@
 [submodule "reference/pypyr"]
 	path = reference/pypyr
 	url = https://github.com/pypyr/pypyr.git
+[submodule "reference/apex"]
+	path = reference/apex
+	url = https://github.com/NVIDIA/apex.git
