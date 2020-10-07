@@ -13,3 +13,6 @@
 [submodule "reference/pytorch-metric-learning"]
 	path = reference/pytorch-metric-learning
 	url = https://github.com/KevinMusgrave/pytorch-metric-learning.git
+[submodule "reference/pypyr"]
+	path = reference/pypyr
+	url = https://github.com/pypyr/pypyr.git
