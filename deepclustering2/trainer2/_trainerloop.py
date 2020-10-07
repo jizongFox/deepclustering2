@@ -32,8 +32,10 @@ class _TrainerLoop(_DDPMixin, metaclass=ABCMeta):
 
     def start_training(self, *args, **kwargs):
         self.to(self._device)
-        with SummaryWriter(str(self._save_dir)) as self._writer:
-            return self._start_training(*args, **kwargs)
+        if self.on_master():
+            with SummaryWriter(str(self._save_dir)) as self._writer:
+                return self._start_training(*args, **kwargs)
+        return self._start_training(*args, **kwargs)
 
     def _start_training(self, *args, **kwargs):
         for self._cur_epoch in range(self._start_epoch, self._max_epoch):
