@@ -57,12 +57,19 @@ class JobSubmiter:
         pprint(job_script)
         sbatch_script = sbatch_script_prefix(**{k: v for k, v in self.__dict__.items()})
         env_script = "\n".join(self.exec_env) if hasattr(self, "exec_env") else ""
-        full_script = "\n".join([sbatch_script, env_script, job_script])
+        full_script = "\n".join(
+            [
+                sbatch_script,
+                f"cd {os.path.abspath(self._project_path)}",
+                env_script,
+                job_script,
+            ]
+        )
         self._write_and_run(full_script)
 
     def _write_and_run(self, full_script):
         random_name = randomString() + ".sh"
-        file_fullpath = os.path.join(self._project_path, random_name)
+        file_fullpath = os.path.abspath(os.path.join(self._project_path, random_name))
         with open(file_fullpath, "w") as f:
             f.write(full_script)
         try:
@@ -72,6 +79,7 @@ class JobSubmiter:
                 subprocess.call(f"sbatch {file_fullpath}", shell=True)
         finally:
             os.remove(file_fullpath)
+            # pass
 
 
 if __name__ == "__main__":

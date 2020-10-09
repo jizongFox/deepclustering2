@@ -60,7 +60,9 @@ class _Epocher(_DDPMixin, metaclass=ABCMeta):
             self._num_batches, int
         ), f"self._num_batches must be provided as an integer, given {self._num_batches}."
         sys.stdout.flush()
-        indicator = tqdm(range(self._num_batches))
+        indicator = tqdm(
+            range(self._num_batches), disable=False if self.on_master() else True
+        )
         indicator = indicator.set_desc_from_epocher(self)
         yield indicator
         indicator._print_description()
