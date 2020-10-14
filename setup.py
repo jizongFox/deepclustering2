@@ -46,6 +46,7 @@ setup(
             "viewer=deepclustering2.viewer.Viewer:main",
             "clip_screencapture=deepclustering2.postprocessing.clip_images:call_from_cmd",
             "report=deepclustering2.postprocessing.report2:call_from_cmd",
+            "file_extractor=deepclustering2.postprocessing.folder_processing:main",
         ]
     },
 )
