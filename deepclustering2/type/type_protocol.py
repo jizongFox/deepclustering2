@@ -1,7 +1,7 @@
 from typing import Callable, TypeVar, Iterable
 
 import torch
-from torch.utils.data.dataloader import DataLoader, _BaseDataLoaderIter
+from torch.utils.data.dataloader import DataLoader, _BaseDataLoaderIter  # noqa
 
 from deepclustering2.optim import Optimizer, Adam, RAdam
 

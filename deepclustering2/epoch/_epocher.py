@@ -88,7 +88,7 @@ class _Epocher(_DDPMixin, metaclass=ABCMeta):
     def run(
         self, *args, **kwargs
     ) -> Union[EpochResultDict, Tuple[EpochResultDict, float]]:
-        self.to(self._device)
+        self.to(self._device)  # put all things into the same device
         with self._register_meters() as self.meters, self._register_indicator() as self._indicator:
             return self._run(*args, **kwargs)
 
@@ -96,7 +96,9 @@ class _Epocher(_DDPMixin, metaclass=ABCMeta):
         if isinstance(device, str):
             device = torch.device(device)
         assert isinstance(device, torch.device)
-        self._model.to(device)
+        for n, m in self.__dict__.items():
+            if isinstance(m, nn.Module):
+                m.to(device)
         self._device = device
 
     @staticmethod
