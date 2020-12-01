@@ -34,7 +34,7 @@ def sbatch_script_prefix(
         f"#SBATCH --nodes={nodes} \n"
         f"#SBATCH --mem={mem}000M \n"
         f"#SBATCH --mail-user={mail_user} \n"
-        f"#SBATCH --mail-type=ALL \n"
+        f"#SBATCH --mail-type=FAIL \n"
     )
     return sbatch_basis
 
