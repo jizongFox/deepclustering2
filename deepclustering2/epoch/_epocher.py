@@ -79,6 +79,17 @@ class _Epocher(_DDPMixin, metaclass=ABCMeta):
         # todo: to be overrided to add or delete individual meters
         return meters
 
+    @contextmanager
+    def _configure_model(self, model: nn.Module):
+        previous_state = model.training
+        self._set_model_state(model)
+        yield
+        model.train(previous_state)
+
+    @abstractmethod
+    def _set_model_state(self, model) -> None:
+        pass
+
     @abstractmethod
     def _run(
         self, *args, **kwargs
@@ -89,7 +100,9 @@ class _Epocher(_DDPMixin, metaclass=ABCMeta):
         self, *args, **kwargs
     ) -> Union[EpochResultDict, Tuple[EpochResultDict, float]]:
         self.to(self._device)  # put all things into the same device
-        with self._register_meters() as self.meters, self._register_indicator() as self._indicator:
+        with self._register_meters() as self.meters, self._register_indicator() as self._indicator, self._configure_model(
+            self._model
+        ):
             return self._run(*args, **kwargs)
 
     def to(self, device: Union[torch.device, str] = torch.device("cpu")):
