@@ -5,6 +5,8 @@ from copy import deepcopy
 from pathlib import Path
 from typing import List, Tuple
 
+from sklearn.model_selection import train_test_split
+
 from deepclustering2 import DATA_PATH
 from deepclustering2.augment import SequentialWrapper
 from deepclustering2.dataset.segmentation._medicalSegmentationDataset import (
@@ -119,16 +121,12 @@ class MMWHSSemiInterface(MedicalDatasetSemiInterface):
             if val_transform:
                 val_set.set_transform(val_transform)
             return labeled_set, unlabeled_set, val_set
-        with FixRandomSeed(random_seed=self.seed):
-            shuffled_patients = train_set.get_group_list()[:]
-            random.shuffle(shuffled_patients)
-            labeled_patients, unlabeled_patients = (
-                shuffled_patients[: int(len(shuffled_patients) * self.labeled_ratio)],
-                shuffled_patients[
-                    -int(math.ceil(len(shuffled_patients) * self.unlabeled_ratio)) :
-                ],
-            )
 
+        labeled_patients, unlabeled_patients = train_test_split(
+            train_set.get_group_list(),
+            test_size=self.unlabeled_ratio,
+            random_state=self.seed,
+        )
         labeled_set = SubMedicalDatasetBasedOnIndex(train_set, labeled_patients)
         unlabeled_set = SubMedicalDatasetBasedOnIndex(train_set, unlabeled_patients)
         assert len(labeled_set) + len(unlabeled_set) == len(
