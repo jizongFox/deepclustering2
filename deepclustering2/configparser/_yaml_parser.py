@@ -9,9 +9,9 @@ from functools import reduce
 from typing import List, Dict, Any, Union, Tuple, Optional
 
 import yaml
+from deepclustering2.utils import path2Path
 
 from ._utils import dict_merge
-from ..utils import path2Path
 
 
 class YAMLArgParser:
@@ -32,16 +32,18 @@ class YAMLArgParser:
         k_v_sep2: str = "=",
         hierarchy: str = ".",
         type_sep: str = "!",
-    ) -> Tuple[Dict[str, Any], Optional[str]]:
+    ) -> Tuple[Dict[str, Any], str, List[str]]:
         cls.k_v_sep1 = k_v_sep1
         cls.k_v_sep2 = k_v_sep2
         cls.type_sep = type_sep
         cls.hierachy = hierarchy
         args: List[str]
-        file_path: Optional[str]
+        base_file_path: Optional[str]
+        optional_file_paths: List[str]
         (
             args,
-            file_path,
+            base_file_path,
+            optional_file_paths,
         ) = cls._setup()  # return a list of string using space, default by argparser.
         yaml_args: List[Dict[str, Any]] = [
             cls.parse_string(
@@ -51,17 +53,41 @@ class YAMLArgParser:
         ]
         hierarchical_dict_list = [cls.parse_hierachy(d) for d in yaml_args]
         merged_dict = cls.merge_dict(hierarchical_dict_list)
-        return merged_dict, file_path
+        return merged_dict, base_file_path, optional_file_paths
 
     @classmethod
-    def _setup(cls) -> Tuple[List[str], Optional[str]]:
-        parser = argparse.ArgumentParser("Augment parser for yaml config")
-        parser.add_argument("--config_path", type=str, default=None)
-        parser.add_argument("strings", nargs="*", type=str, default=[""])
+    def _setup(cls) -> Tuple[List[str], Optional[str], List[str]]:
+        parser = argparse.ArgumentParser(
+            "Augment parser for yaml config",
+            formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        )  # noqa
+        path_parser = parser.add_argument_group("config path parser")
+        path_parser.add_argument(
+            "--config_path",
+            type=str,
+            required=False,
+            default=None,
+            help="base config path location",
+        )
+        parser.add_argument(
+            "--opt_config_path",
+            type=str,
+            default=[],
+            nargs=argparse.ZERO_OR_MORE,
+            help="optional config path locations",
+        )
+        parser.add_argument(
+            "optional_variables",
+            nargs="*",
+            type=str,
+            default=[""],
+            help="optional variables",
+        )
         args: argparse.Namespace = parser.parse_args()
         return (
-            args.strings,
+            args.optional_variables,
             args.config_path,
+            args.opt_config_path,
         )  # return a list of string using space, default by argparser.
 
     @staticmethod
@@ -79,7 +105,7 @@ class YAMLArgParser:
         :param type_sep:
         :return: dict
         """
-        if string == "":
+        if string == "" or len(string) == 0:
             return {}
 
         if type_sep in string:

@@ -2,12 +2,12 @@ from abc import ABCMeta, abstractmethod
 from typing import Callable, Union
 
 import torch
-from torch import nn
-
 from deepclustering2.meters2.meter_interface import EpochResultDict
 from deepclustering2.meters2.storage_interface import Storage, StorageIncomeDict
 from deepclustering2.models import Model
 from deepclustering2.writer import SummaryWriter
+from torch import nn
+
 from ..ddp.ddp import _DDPMixin
 
 
@@ -62,7 +62,9 @@ class _TrainerLoop(_DDPMixin, metaclass=ABCMeta):
                 self._storage.to_csv(self._save_dir)
 
     def run_epoch(self, *args, **kwargs):
-        return self._run_epoch(*args, **kwargs)
+        epoch_result = self._run_epoch(*args, **kwargs)
+        torch.save(self._model.state_dict(), f"{self._save_dir}/model_last.pth")
+        return epoch_result
 
     @abstractmethod
     def _run_epoch(self, *args, **kwargs) -> EpochResultDict:
