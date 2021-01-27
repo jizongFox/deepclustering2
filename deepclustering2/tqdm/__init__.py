@@ -2,7 +2,7 @@
 from __future__ import absolute_import, division
 
 import atexit
-from math import isnan
+from collections import Iterable
 
 # native libraries
 from numbers import Number
@@ -13,9 +13,67 @@ from tqdm import tqdm as _tqdm
 from tqdm.utils import _basestring, _OrderedDict
 
 from deepclustering2.meters2.meter_interface import EpochResultDict
-from deepclustering2.utils import dict_flatten, dict_filter, nice_dict
+
 
 # For parallelism safety
+
+
+def is_float(v):
+    """if v is a scalar"""
+    try:
+        float(v)
+        return True
+    except (ValueError, TypeError):
+        return False
+
+
+def is_iterable(v):
+    """if v is an iterable, except str"""
+    if isinstance(v, str):
+        return False
+    return isinstance(v, (list, tuple, dict))
+
+
+def _float2str(v):
+    """convert a scalar to float, in order to display"""
+    v = float(v)
+    if abs(float(v)) < 0.01 or abs(float(v)) >= 999:
+        return f"{v:.2e}"
+    return f"{v:.3f}"
+
+
+def _least_item2str(v):
+    if is_float(v):
+        return _float2str(v)
+    return f"{v}"
+
+
+def _generate_pair(k, v):
+    """generate str for non iterable k v"""
+    return f"{k}:{_least_item2str(v)}"
+
+
+def _dict2str(dictionary: dict):
+    strings = []
+    for k, v in dictionary.items():
+        if not is_iterable(v):
+            strings.append(_generate_pair(k, v))
+        else:
+            strings.append(f"{k}:[" + item2str(v) + "]")
+    return ", ".join(strings)
+
+
+def _iter2str(item: Iterable):
+    """A list or a tuple"""
+    return ", ".join(
+        [_least_item2str(x) if not is_iterable(x) else item2str(x) for x in item]
+    )
+
+
+def item2str(item):
+    if isinstance(item, dict):
+        return _dict2str(item)
+    return _iter2str(item)
 
 
 class tqdm(_tqdm):
@@ -77,16 +135,13 @@ class tqdm(_tqdm):
         self, ordered_dict: EpochResultDict = None, refresh=True, **kwargs
     ):
         if ordered_dict:
-            assert isinstance(ordered_dict, EpochResultDict), type(ordered_dict)
-            _flatten_dict = dict_filter(
-                dict_flatten(ordered_dict), lambda k, v: (not isnan(v))
-            )
-            self.set_postfix(_flatten_dict, refresh, **kwargs)
-            self._post_dict_cache = _flatten_dict
+            display = str(item2str(ordered_dict))
+            self.set_postfix_str(display)
+            self._post_dict_cache = display
 
     def _print_description(self):
         if self._post_dict_cache:
-            print(f"{self.desc}: {nice_dict(self._post_dict_cache)}")
+            print(f"{self.desc}: {self._post_dict_cache}")
 
     def set_description(self, desc=None, refresh=True):
         """

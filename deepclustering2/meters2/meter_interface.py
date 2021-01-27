@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from typing import Dict, List, Optional, Type
+from typing import Dict, List, Optional
 
 from deepclustering2.utils import nice_dict
 from .individual_meters._metric import _Metric, MeterResultDict
@@ -100,7 +100,7 @@ class MeterInterface:
     def group(self) -> List[str]:
         return list(self._group_dicts.keys())
 
-    def tracking_status(
+    def _tracking_status(
         self, group_name=None, detailed_summary=False
     ) -> EpochResultDict:
         """
@@ -123,6 +123,19 @@ class MeterInterface:
                 for k, v in self.meters.items()
             }
         )
+
+    def tracking_status(self, group_name=None, final=False, cache_time=10):
+        if final:
+            return self._tracking_status(group_name=group_name)
+        if not hasattr(self, "__n__"):
+            self.__n__ = 0
+        if not hasattr(self, "__cache__"):
+            self.__cache__ = self._tracking_status(group_name=group_name)
+
+        self.__n__ += 1
+        if self.__n__ % cache_time == 0:
+            self.__cache__ = self._tracking_status(group_name=group_name)
+        return self.__cache__
 
     def add(self, meter_name, *args, **kwargs):
         assert meter_name in self.meter_names
