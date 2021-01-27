@@ -1,6 +1,25 @@
 import collections
+from contextlib import contextmanager
 from copy import deepcopy as dcopy
 from typing import Dict, Any
+
+_CONFIG_DICT = {}
+
+
+def get_config(*, scope: str) -> Dict[str, Any]:
+    if len(_CONFIG_DICT) == 0:
+        raise RuntimeError("`get_config` should be used within ")
+    if scope not in _CONFIG_DICT:
+        raise RuntimeError("scope not in the key")
+    return _CONFIG_DICT[scope]
+
+
+@contextmanager
+def register_scope(config: Dict[str, Any], scope: str):
+    assert scope not in _CONFIG_DICT
+    _CONFIG_DICT[scope] = config
+    yield config
+    del _CONFIG_DICT[scope]
 
 
 # merge hierarchically two dictionaries

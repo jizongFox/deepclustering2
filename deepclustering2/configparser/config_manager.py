@@ -1,6 +1,8 @@
+from copy import deepcopy as dcp
+from functools import reduce
 from pprint import pprint
 from typing import Dict, Any, Optional
-from copy import deepcopy as dcp
+
 from ._utils import dict_merge
 from ._yaml_parser import yaml_load, YAMLArgParser
 
@@ -8,29 +10,54 @@ __all__ = ["ConfigManger"]
 
 
 class ConfigManger:
-    def __init__(self, DEFAULT_CONFIG_PATH: str = None, verbose=True) -> None:
+    def __init__(self, base_path=None, optional_paths=None, verbose=True) -> None:
+        if isinstance(optional_paths, str):
+            optional_paths = [
+                optional_paths,
+            ]
         self._default_config: Optional[Dict[str, Any]] = None
         self._parsed_args: Dict[str, Any]
         self._merged_args: Dict[str, Any]
-        self._parsed_args, config_path = YAMLArgParser()
-        self._default_path = config_path if config_path else DEFAULT_CONFIG_PATH
+        self._parsed_args, config_path, optional_paths2 = YAMLArgParser()
+        self._base_path = config_path or base_path
+        self._optional_paths = (
+            optional_paths if len(optional_paths2) == 0 else optional_paths2
+        )
 
-        if self._default_path:
-            self._default_config = yaml_load(self._default_path, verbose=False)
+        # configs
+        self._base_config = yaml_load(self._base_path, verbose=False)
+        self._optional_configs = (
+            {}
+            if self._optional_paths is None
+            else [yaml_load(x) for x in self._optional_paths]
+        )
 
-        self._merged_config = dict_merge(self._default_config or {}, self._parsed_args)
+        self._merged_config = reduce(
+            dict_merge, [self._base_config, *self._optional_configs, self._parsed_args]
+        )
         if verbose:
-            self.show_default_dict()
+            self.show_base_dict()
+            self.show_opt_dicts()
             self.show_parsed_dict()
             self.show_merged_dict()
 
+    def __call__(self, *, scope: str):
+        config = self.config
+        from ._utils import register_scope
+
+        return register_scope(config=config, scope=scope)
+
     @property
-    def default_config(self):
-        return dcp(self._default_config)
+    def base_config(self):
+        return dcp(self._base_config)
 
     @property
     def parsed_config(self):
         return dcp(self._parsed_args)
+
+    @property
+    def optional_configs(self):
+        return dcp(self._optional_configs)
 
     @property
     def merged_config(self):
@@ -41,13 +68,17 @@ class ConfigManger:
         config = self.merged_config
         return dcp(config)
 
-    def show_default_dict(self):
-        print("default dict from {}".format(self._default_path))
-        pprint(self.default_config)
+    def show_base_dict(self):
+        print("default dict from {}".format(self._base_path))
+        pprint(self.base_config)
 
     def show_parsed_dict(self):
         print("parsed dict:")
         pprint(self.parsed_config)
+
+    def show_opt_dicts(self):
+        print("optional dicts:")
+        pprint(self.optional_configs)
 
     def show_merged_dict(self):
         print("merged dict:")
