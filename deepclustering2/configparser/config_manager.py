@@ -1,7 +1,7 @@
 from copy import deepcopy as dcp
 from functools import reduce
 from pprint import pprint
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 
 from ._utils import dict_merge
 from ._yaml_parser import yaml_load, YAMLArgParser
@@ -83,3 +83,11 @@ class ConfigManger:
     def show_merged_dict(self):
         print("merged dict:")
         pprint(self.merged_config)
+
+    @property
+    def base_path(self) -> str:
+        return self._base_path
+
+    @property
+    def optional_path(self) -> List[str]:
+        return self._optional_paths

@@ -140,6 +140,8 @@ class _TrainerIOMixin(_BufferMixin, metaclass=ABCMeta):
         # initialize best_score, instead of None
         if self._best_score is None:
             self._best_score = current_score
+            self._save_to(save_name="best.pth", save_dir=save_dir)
+            return
 
         if high_is_better:
             if self._best_score < current_score:

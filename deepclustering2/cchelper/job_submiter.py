@@ -65,7 +65,8 @@ class JobSubmiter:
                 job_script,
             ]
         )
-        self._write_and_run(full_script)
+        code = self._write_and_run(full_script)
+        return code
 
     def _write_and_run(self, full_script):
         random_name = randomString() + ".sh"
@@ -74,12 +75,13 @@ class JobSubmiter:
             f.write(full_script)
         try:
             if self._on_local:
-                subprocess.call(f"bash {file_fullpath}", shell=True)
+                code = subprocess.call(f"bash {file_fullpath}", shell=True)
             else:
-                subprocess.call(f"sbatch {file_fullpath}", shell=True)
+                code = subprocess.call(f"sbatch {file_fullpath}", shell=True)
         finally:
             os.remove(file_fullpath)
             # pass
+        return code
 
 
 if __name__ == "__main__":
