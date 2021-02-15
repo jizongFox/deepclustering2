@@ -452,6 +452,8 @@ class Multi_Slice_Viewer(object):
                         ax.mask_volume[ax.index],
                         cmap=cmap(**self.kwargs["plot_parameters"]["cmap"]),
                         alpha=self.kwargs["plot_parameters"]["alpha"],
+                        vmin=ax.img_volume.min(),
+                        vmax=ax.img_volume.max(),
                     )
                 ax.axis("off")
                 ax.set_title(f"{subject_name} @ plane:{ax.index} with {mask_name}")

@@ -3,6 +3,9 @@ from functools import reduce
 from pprint import pprint
 from typing import Dict, Any, Optional, List
 
+from loguru import logger
+
+from ._merge_checker import merge_checker
 from ._utils import dict_merge
 from ._yaml_parser import yaml_load, YAMLArgParser
 
@@ -10,7 +13,9 @@ __all__ = ["ConfigManger"]
 
 
 class ConfigManger:
-    def __init__(self, base_path=None, optional_paths=None, verbose=True) -> None:
+    def __init__(
+        self, base_path=None, optional_paths=None, verbose=True, strict=True
+    ) -> None:
         if isinstance(optional_paths, str):
             optional_paths = [
                 optional_paths,
@@ -31,7 +36,18 @@ class ConfigManger:
             if self._optional_paths is None
             else [yaml_load(x) for x in self._optional_paths]
         )
-
+        try:
+            merge_checker(
+                base_dict=reduce(
+                    dict_merge, [self._base_config, *self._optional_configs]
+                ),
+                incoming_dict=self._parsed_args,
+            )
+        except RuntimeError as e:
+            if strict:
+                raise e
+            else:
+                logger.exception(e)
         self._merged_config = reduce(
             dict_merge, [self._base_config, *self._optional_configs, self._parsed_args]
         )
