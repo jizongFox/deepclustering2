@@ -1,6 +1,5 @@
 # this is to compare experimental data cross different folders
 import argparse
-from itertools import repeat
 from pathlib import Path
 from pprint import pprint
 from typing import List, Dict
@@ -8,13 +7,14 @@ from typing import List, Dict
 import numpy as np
 import pandas as pd
 
+from deepclustering2.configparser._yaml_parser import str2bool  # noqa
 from deepclustering2.utils import merge_dict
-from deepclustering2.configparser._yaml_parser import str2bool
 
 
 def arg_parser() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Report results from different folders."
+        description="Report results from different folders.",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     filepath_group = parser.add_mutually_exclusive_group(required=True)
     filepath_group.add_argument(
@@ -41,10 +41,11 @@ def arg_parser() -> argparse.Namespace:
     parser.add_argument(
         "--file",
         type=str,
+        required=True,
         nargs="+",
-        default=["wholeMeter.csv"],
-        metavar="FILENAME",
-        help=".csv file name, default `wholeMeter.csv`.",
+        default=["*/*.csv"],
+        metavar="FILENAME or REGEX",
+        help=".csv file name or regex rules.",
     )
     parser.add_argument(
         "--high_better",
