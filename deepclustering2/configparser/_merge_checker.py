@@ -1,4 +1,4 @@
-import warnings
+import difflib
 
 
 def _name_getter(dictionary: dict, previous_name, previous_names):
@@ -22,10 +22,14 @@ def merge_checker(base_dict, incoming_dict):
     incom_names = []
     _name_getter(incoming_dict, "", incom_names)
     undesired_attributes = sorted(set(incom_names) - set(base_names))
+
+    def create_proposal(unwanted_string: str):
+        return difflib.get_close_matches(unwanted_string, base_names, n=1)[0]
+
     if len(undesired_attributes) > 0:
         raise RuntimeError(
             f"\nUnwanted attributed identified compared with base config: \t"
-            f"{', '.join(undesired_attributes)}"
+            f"{', '.join([f'`{x}`: (possibly `{create_proposal(x)}`)' for x in undesired_attributes])}"
         )
 
 
