@@ -1,5 +1,7 @@
-import numpy as np
 from collections import defaultdict
+from typing import List
+
+import numpy as np
 
 from ._metric import _Metric, MeterResultDict
 
@@ -75,3 +77,9 @@ class MultipleAverageValueMeter(_Metric):
 
     def detailed_summary(self) -> MeterResultDict:
         return self.summary()
+
+
+class AverageValueListMeter(MultipleAverageValueMeter):
+    def add(self, list_value: List[float]):
+        for i, v in enumerate(list_value):
+            self._meter_dicts[str(i)].add(v)

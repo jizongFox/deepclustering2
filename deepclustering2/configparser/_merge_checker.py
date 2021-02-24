@@ -24,7 +24,11 @@ def merge_checker(base_dict, incoming_dict):
     undesired_attributes = sorted(set(incom_names) - set(base_names))
 
     def create_proposal(unwanted_string: str):
-        return difflib.get_close_matches(unwanted_string, base_names, n=1)[0]
+        candidate_list = difflib.get_close_matches(unwanted_string, base_names, n=1)
+        if len(candidate_list) > 0:
+            return candidate_list[0]
+        else:
+            return ""
 
     if len(undesired_attributes) > 0:
         raise RuntimeError(
