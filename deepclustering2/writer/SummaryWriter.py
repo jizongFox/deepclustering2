@@ -1,10 +1,14 @@
 import atexit
 from pathlib import Path
 
+from tensorboard.plugins.image import metadata as image_metadata
 from tensorboardX import SummaryWriter as _SummaryWriter
 
 from deepclustering2.meters2 import StorageIncomeDict
 from deepclustering2.utils import flatten_dict
+
+image_metadata.PLUGIN_NAME = 1000
+_TensorBoard__STACK = []
 
 
 def path2Path(path) -> Path:
@@ -21,6 +25,7 @@ class SummaryWriter(_SummaryWriter):
             str(log_dir / "tensorboard"), comment, flush_secs=flush_secs, **kwargs
         )
         atexit.register(self.close)
+        _TensorBoard__STACK.append(self)
 
     def add_scalar_with_tag(
         self, tag, tag_scalar_dict, global_step=None, walltime=None
@@ -54,3 +59,19 @@ class SummaryWriter(_SummaryWriter):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
+
+    def close(self):
+        try:
+            _self = _TensorBoard__STACK.pop()
+            assert id(_self) == id(self)
+        except Exception:
+            pass
+        super(SummaryWriter, self).close()
+
+
+def get_tb_writer() -> SummaryWriter:
+    if len(_TensorBoard__STACK) == 0:
+        raise RuntimeError(
+            "`get_tb_writer` must be call after with statement of a writer"
+        )
+    return _TensorBoard__STACK[-1]
