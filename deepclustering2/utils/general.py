@@ -2,6 +2,7 @@
 import collections
 import os
 import random
+from contextlib import contextmanager
 from copy import deepcopy as dcopy
 from functools import partial
 from functools import reduce
@@ -80,6 +81,41 @@ def set_benchmark(seed):
     torch.cuda.manual_seed_all(seed)
     torch.backends.cudnn.enabled = True
     torch.backends.cudnn.benchmark = True
+
+
+# conver to context manager
+@contextmanager
+def fix_all_seed_within_context(seed):
+    random_state = random.getstate()
+    np_state = np.random.get_state()
+    torch_state = torch.random.get_rng_state()
+    torch_cuda_state = torch.cuda.get_rng_state()
+    torch_cuda_state_all = torch.cuda.get_rng_state_all()
+    fix_all_seed(seed)
+    yield
+
+    random.setstate(random_state)
+    np.random.set_state(np_state)  # noqa
+    torch.random.set_rng_state(torch_state)  # noqa
+    torch.cuda.set_rng_state(torch_cuda_state)
+    torch.cuda.set_rng_state_all(torch_cuda_state_all)
+
+
+@contextmanager
+def set_benchmark_within_context(seed):
+    random_state = random.getstate()
+    np_state = np.random.get_state()
+    torch_state = torch.random.get_rng_state()
+    torch_cuda_state = torch.cuda.get_rng_state()
+    torch_cuda_state_all = torch.cuda.get_rng_state_all()
+    set_benchmark(seed)
+    yield
+
+    random.setstate(random_state)
+    np.random.set_state(np_state)  # noqa
+    torch.random.set_rng_state(torch_state)  # noqa
+    torch.cuda.set_rng_state(torch_cuda_state)
+    torch.cuda.set_rng_state_all(torch_cuda_state_all)
 
 
 # tqdm
