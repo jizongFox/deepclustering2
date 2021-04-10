@@ -166,13 +166,33 @@ class ExpScheduler(WeightScheduler):
         return self.get_lr(self.epoch)
 
     def get_lr(self, cur_epoch):
-        return (
-            self.begin_value
-            + (self.end_value - self.begin_value)
-            * (cur_epoch / self.max_epoch) ** self.gamma
+        return self.begin_value + (self.end_value - self.begin_value) * np.power(
+            (cur_epoch / self.max_epoch), self.gamma
+        )
+
+
+class InverseExpScheduler(WeightScheduler):
+    def __init__(self, max_epoch, begin_value=0, end_value=1.0, gamma=2):
+        super().__init__()
+        self.max_epoch = max_epoch
+        self.begin_value = float(begin_value)
+        self.end_value = float(end_value)
+        self.epoch = 0
+        self.gamma = gamma
+
+    def step(self):
+        self.epoch += 1
+
+    @property
+    def value(self):
+        return self.get_lr(self.epoch)
+
+    def get_lr(self, cur_epoch):
+        return self.begin_value + (self.end_value - self.begin_value) * np.sqrt(
+            cur_epoch / self.max_epoch
         )
 
 
 if __name__ == "__main__":
-    scheduler = ExpScheduler(50, 1, 3, gamma=2)
+    scheduler = RampScheduler(0, max_epoch=50, min_value=1, max_value=3, ramp_mult=-5)
     scheduler.plot_weights()
