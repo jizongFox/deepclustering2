@@ -40,7 +40,7 @@ class WeightScheduler(object):
     def plot_weights(self):
         _current_epoch = self.epoch
         self.epoch = 0
-        epochs = list(range(int(self.max_epoch * 1.5)))
+        epochs = list(range(int(self.max_epoch)))
         lrs = []
         for _ in epochs:
             lrs.append(self.value)
@@ -147,3 +147,32 @@ class LinearScheduler(WeightScheduler):
         return self.begin_value + (self.end_value - self.begin_value) * (
             cur_epoch / self.max_epoch
         )
+
+
+class ExpScheduler(WeightScheduler):
+    def __init__(self, max_epoch, begin_value=0, end_value=1.0, gamma=2):
+        super().__init__()
+        self.max_epoch = max_epoch
+        self.begin_value = float(begin_value)
+        self.end_value = float(end_value)
+        self.epoch = 0
+        self.gamma = gamma
+
+    def step(self):
+        self.epoch += 1
+
+    @property
+    def value(self):
+        return self.get_lr(self.epoch)
+
+    def get_lr(self, cur_epoch):
+        return (
+            self.begin_value
+            + (self.end_value - self.begin_value)
+            * (cur_epoch / self.max_epoch) ** self.gamma
+        )
+
+
+if __name__ == "__main__":
+    scheduler = ExpScheduler(50, 1, 3, gamma=2)
+    scheduler.plot_weights()
