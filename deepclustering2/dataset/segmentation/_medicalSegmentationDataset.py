@@ -4,12 +4,15 @@ from pathlib import Path
 from typing import List, Tuple, Dict, Union, Optional
 
 from PIL import Image
+from PIL import ImageFile
 from torch import Tensor
 from torch.utils.data import Dataset
 
 from deepclustering2.augment import SequentialWrapper
 from deepclustering2.augment.pil_augment import ToTensor, ToLabel
-from deepclustering2.utils import map_, assert_list
+from deepclustering2.utils import map_, assert_list, tqdm
+
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 
 def allow_extension(path: str, extensions: List[str]) -> bool:
@@ -68,6 +71,7 @@ class MedicalImageSegmentationDataset(Dataset):
         )
         self._debug = os.environ.get("PYDEBUG", "0") == "1"
         self._set_patient_pattern(patient_pattern)
+        self._is_preload = False
 
     @property
     def subfolders(self) -> List[str]:
@@ -112,14 +116,30 @@ class MedicalImageSegmentationDataset(Dataset):
         return img_list, filename
 
     def _getitem_index(self, index):
-        img_list = [
-            Image.open(self._filenames[subfolder][index])
-            for subfolder in self.subfolders
-        ]
+        if self._is_preload:
+            img_list = self._preload_storage[index]
+        else:
+            img_list = [
+                Image.open(self._filenames[subfolder][index])
+                for subfolder in self.subfolders
+            ]
         filename_list = [
             self._filenames[subfolder][index] for subfolder in self.subfolders
         ]
         return img_list, filename_list
+
+    def _preload(self):
+        self._preload_storage = {}
+        print(f"preloading {len(self)} {self.__class__.__name__} data ...")
+        for index in tqdm(range(len(self)), total=len(self)):
+            self._preload_storage[index] = [
+                Image.open(self._filenames[subfolder][index])
+                for subfolder in self.subfolders
+            ]
+
+    def preload(self):
+        self._is_preload = True
+        self._preload()
 
     def _set_patient_pattern(self, pattern):
         """

@@ -14,11 +14,10 @@ from typing import Iterable, Set, Tuple, TypeVar, Callable, List, Dict, Any, Uni
 import numpy as np
 import torch
 import torch.nn.functional as F
+from deepclustering2.type import to_float
 from torch import Tensor
 from torch import nn
 from tqdm import tqdm
-
-from deepclustering2.type import to_float
 
 A = TypeVar("A")
 B = TypeVar("B")
@@ -89,16 +88,20 @@ def fix_all_seed_within_context(seed):
     random_state = random.getstate()
     np_state = np.random.get_state()
     torch_state = torch.random.get_rng_state()
-    torch_cuda_state = torch.cuda.get_rng_state()
-    torch_cuda_state_all = torch.cuda.get_rng_state_all()
+    cuda_seed_saved = False
+    if torch.cuda.is_available():
+        torch_cuda_state = torch.cuda.get_rng_state()
+        torch_cuda_state_all = torch.cuda.get_rng_state_all()
+        cuda_seed_saved = True
     fix_all_seed(seed)
     yield
 
     random.setstate(random_state)
     np.random.set_state(np_state)  # noqa
     torch.random.set_rng_state(torch_state)  # noqa
-    torch.cuda.set_rng_state(torch_cuda_state)
-    torch.cuda.set_rng_state_all(torch_cuda_state_all)
+    if torch.cuda.is_available() and cuda_seed_saved:
+        torch.cuda.set_rng_state(torch_cuda_state)
+        torch.cuda.set_rng_state_all(torch_cuda_state_all)
 
 
 @contextmanager

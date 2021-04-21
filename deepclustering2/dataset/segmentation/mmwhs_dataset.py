@@ -34,6 +34,7 @@ class MMWHSDataset(MedicalImageSegmentationDataset):
         subfolders: List[str],
         transforms: SequentialWrapper = None,
         verbose=True,
+        preload=False,
     ) -> None:
         if (
             Path(root_dir, self.folder_name).exists()
@@ -55,6 +56,7 @@ class MMWHSDataset(MedicalImageSegmentationDataset):
             transforms,
             "\d+",
             verbose,
+            preload=preload,
         )
 
 
@@ -120,6 +122,12 @@ class MMWHSSemiInterface(MedicalDatasetSemiInterface):
                 unlabeled_set.set_transform(unlabeled_transform)
             if val_transform:
                 val_set.set_transform(val_transform)
+            if labeled_set._is_preload:
+                labeled_set._preload()
+            if unlabeled_set._is_preload:
+                unlabeled_set._preload()
+            if val_set._is_preload:
+                val_set._preload()
             return labeled_set, unlabeled_set, val_set
 
         labeled_patients, unlabeled_patients = train_test_split(
@@ -129,6 +137,12 @@ class MMWHSSemiInterface(MedicalDatasetSemiInterface):
         )
         labeled_set = SubMedicalDatasetBasedOnIndex(train_set, labeled_patients)
         unlabeled_set = SubMedicalDatasetBasedOnIndex(train_set, unlabeled_patients)
+        if labeled_set._is_preload:
+            labeled_set._preload()
+        if unlabeled_set._is_preload:
+            unlabeled_set._preload()
+        if val_set._is_preload:
+            val_set._preload()
         assert len(labeled_set) + len(unlabeled_set) == len(
             train_set
         ), "wrong on labeled/unlabeled split."
