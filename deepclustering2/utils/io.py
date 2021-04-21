@@ -37,6 +37,7 @@ def write_yaml(
     dictionary: Dict, save_dir: Union[Path, str], save_name: str, force_overwrite=True
 ) -> None:
     save_path = path2Path(save_dir) / save_name
+    path2Path(save_dir).mkdir(exist_ok=True, parents=True)
     if save_path.exists():
         if force_overwrite is False:
             save_name = (
