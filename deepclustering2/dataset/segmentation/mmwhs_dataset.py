@@ -56,7 +56,6 @@ class MMWHSDataset(MedicalImageSegmentationDataset):
             transforms,
             "\d+",
             verbose,
-            preload=preload,
         )
 
 
