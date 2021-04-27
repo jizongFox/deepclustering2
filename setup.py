@@ -29,7 +29,7 @@ setup(
         "pandas",
         "easydict",
         "matplotlib",
-        "tqdm",
+        "tqdm==4.36.1",
         "py",
         "tensorboardX",
         "tensorboard",
