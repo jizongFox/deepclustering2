@@ -54,7 +54,7 @@ class _DDPMixin:
     def rank(self) -> Optional[int]:
         try:
             return dist.get_rank()
-        except (AssertionError, AttributeError):
+        except (AssertionError, AttributeError, RuntimeError):
             return None
 
     def on_master(self) -> bool:
